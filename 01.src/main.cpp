@@ -23,7 +23,7 @@
 #include "TTable.h"
 #include "IAAP.h"
 #include "lpc12xx_timer32.h"
-
+#include "ssp.h"
 
 // TODO: insert other include files here
 //extern void SysTick_Handler (void);
@@ -49,7 +49,7 @@ Heater 			pHeater;
 Valve			pValve;
 Comport			pRS485;
 Comport 		pZB;
-MotorControl 	pMotor;
+//MotorControl 	pMotor;
 TempSensor 		pTempSensor;
 IAAP			pIAAP;
 
@@ -77,19 +77,19 @@ void button_CallBack(BT_TYPE_T type, BT_STATE_TYPE_T state) {
 	case BT_UP :
 		if (state == BT_STATE_PUSH) {
 			//pMotor.MoveToStep()
-			pMotor.ForceMove(MOVE_FF);
+			//pMotor.ForceMove(MOVE_FF);
 		}
 		if (state == BT_STATE_PRESS) {
-			pMotor.ForceMove(MOVE_STOP);
+			//pMotor.ForceMove(MOVE_STOP);
 		}
 		break;
 	case BT_DOWN :
 		if (state == BT_STATE_PUSH) {
 			//pMotor.MoveToStep()
-			pMotor.ForceMove(MOVE_RW);
+			//pMotor.ForceMove(MOVE_RW);
 		}
 		else if (state == BT_STATE_PRESS) {
-			pMotor.ForceMove(MOVE_STOP);
+			//pMotor.ForceMove(MOVE_STOP);
 		}
 		break;
 	case BT_RIGHT :
@@ -120,6 +120,8 @@ void Init(void) {
 	//UARTRegDataCb(ZB_PORT, phyZBDataIn_Callback);
 	UARTRegSendCmp(RS485_PORT, phyRS485SendCmp_Callback);
 	//UARTRegSendCmp(ZB_PORT, phyZBSendCmp_Callback);
+	SSPInit();
+
 	// Heater Initialized hardware
 	pHeater.Init(hPort);
 	pHeater.Relay_Control(RELAY_ON);
@@ -127,11 +129,11 @@ void Init(void) {
 	pValve.Init(lVP, rVP);
 	pValve.Valve_Control(VALVE_LEFT);
 	// Motor initialized hardware
-	pMotor.Init();
+	//pMotor.Init();
 	// Temperature initialized hardware
 	pTempSensor.Init(tTable, 101);
 	//
-	pIAAP.Init(&pHeater, &pValve, &pMotor, &pTempSensor);
+	//pIAAP.Init(&pHeater, &pValve, &pMotor, &pTempSensor);
 	pRS485.Init(&pIAAP);
 	pRS485.SetAddress(0x01);
 
@@ -139,153 +141,6 @@ void Init(void) {
 	pBt.RegisterCallBack(button_CallBack);
 
 
-}
-
-void PWM_INIT(void) {
-	TIM32_InitTypeDef tim32;
-
-/*	IOCON_PIO_CFG_Type icon;
-
-	IOCON_StructInit (&icon);
-	icon.type = IOCON_CT32_B0_MAT2_LOC1;
-	icon.invert = IOCON_PIO_INV_INVERTED;
-	 IOCON_SetFunc (&icon);*/
-
-	TIM32_StructInit(TIM32_MODE_TIMER, &tim32);
-	tim32.PrescaleOption = TIM32_PRESCALE_USVAL;
-	tim32.PrescaleValue = 1;	// 1 usec
-
-	pwmCfg.MatchChannel = TIM32_MATCH_CHANNEL0;
-	pwmCfg.IntOnMatch = TRUE;
-	pwmCfg.ResetOnMatch = TRUE;
-	pwmCfg.StopOnMatch = FALSE;
-	pwmCfg.ExtPWMOutput = DISABLE;
-	pwmCfg.MatchValue = 100; //--> 10 kHz
-
-	TIM32_Init(LPC_CT32B0, TIM32_MODE_TIMER, &tim32);
-	TIM32_ConfigPWM(LPC_CT32B0, &pwmCfg);
-
-	pwmCfg.MatchChannel = TIM32_MATCH_CHANNEL2;
-	pwmCfg.IntOnMatch = TRUE;
-	pwmCfg.ResetOnMatch = FALSE;
-	pwmCfg.StopOnMatch = FALSE;
-	pwmCfg.ExtPWMOutput = DISABLE;
-	pwmCfg.MatchValue = 25; //--> 50%
-	TIM32_ConfigPWM(LPC_CT32B0, &pwmCfg);
-
-	SYS_ConfigAHBCLK(SYS_AHBCLKCTRL_CT32B0, ENABLE);
-	NVIC_EnableIRQ(TIMER_32_0_IRQn);
-	TIM32_Cmd(LPC_CT32B0, ENABLE);
-
-}
-
-
-uint8_t motorState;
-//uint8_t pwmCount;
-uint8_t apc;
-uint8_t anc;
-uint8_t bpc;
-uint8_t bnc;
-uint8_t cstr;
-
-void TestMotor(void) {
-
-	switch (motorState) {
-	case 0 :
-
-		GPIO_SetHighLevel(MOTOR_PORT, GATE_AP, ENABLE);	// A+ 100
-		GPIO_SetLowLevel(MOTOR_PORT, GATE_AN, ENABLE);	// A- off
-		GPIO_SetHighLevel(MOTOR_PORT, GATE_BP, ENABLE);	// B+ 100
-		GPIO_SetLowLevel(MOTOR_PORT, GATE_BN, ENABLE);	// B- off
-		motorState = 1;
-		cstr |= 1;
-		break;
-	case 1 :
-		GPIO_SetHighLevel(MOTOR_PORT, GATE_AP, ENABLE);	// A+ 100
-		GPIO_SetLowLevel(MOTOR_PORT, GATE_AN, ENABLE);	// A- off
-		GPIO_SetLowLevel(MOTOR_PORT, GATE_BP, ENABLE);	// B+ off
-		GPIO_SetHighLevel(MOTOR_PORT, GATE_BN, ENABLE);	// B- 100
-		motorState = 2;
-		cstr |= 2;
-		break;
-	case 2 :
-		GPIO_SetLowLevel(MOTOR_PORT, GATE_AP, ENABLE);	// A+ off
-		GPIO_SetHighLevel(MOTOR_PORT, GATE_AN, ENABLE);	// A- 100
-		GPIO_SetLowLevel(MOTOR_PORT, GATE_BP, ENABLE);	// B+ off
-		GPIO_SetHighLevel(MOTOR_PORT, GATE_BN, ENABLE);	// B- 100
-		motorState = 3;
-		cstr |= 4;
-		break;
-	case 3 :
-		GPIO_SetLowLevel(MOTOR_PORT, GATE_AP, ENABLE);	// A+ off
-		GPIO_SetHighLevel(MOTOR_PORT, GATE_AN, ENABLE);	// A- 100
-		GPIO_SetHighLevel(MOTOR_PORT, GATE_BP, ENABLE);	// B+ 100
-		GPIO_SetLowLevel(MOTOR_PORT, GATE_BN, ENABLE);	// B- off
-		motorState = 0;
-		cstr |= 8;
-		break;
-	}
-}
-#define DUtyTh		20
-void TestPWMTick(void) {
-	if (cstr & 1) {
-		if (++apc >= DUtyTh) {
-			GPIO_SetLowLevel(MOTOR_PORT, GATE_AP, ENABLE);	// A+ 100
-			apc = 0;
-			cstr &=  ~(uint8_t)0x01;
-		}
-	}
-	if (cstr & 2) {
-		if (++bnc >= DUtyTh) {
-			GPIO_SetLowLevel(MOTOR_PORT, GATE_BN, ENABLE);	// A+ 100
-			bnc = 0;
-			cstr &=  ~(uint8_t)0x02;
-		}
-	}
-	if (cstr & 4) {
-		if (++anc >= DUtyTh) {
-			GPIO_SetLowLevel(MOTOR_PORT, GATE_AN, ENABLE);	// A+ 100
-			anc = 0;
-			cstr &=  ~(uint8_t)0x04;
-		}
-	}
-	if (cstr & 8) {
-		if (++bpc >= DUtyTh) {
-			GPIO_SetLowLevel(MOTOR_PORT, GATE_BP, ENABLE);	// A+ 100
-			bpc = 0;
-			cstr &=  ~(uint8_t)0x08;
-		}
-	}
-}
-#define DutyVal		4
-void PWMPPeriod_Rountine(void) {
-	if (apc >= DutyVal && apc < 20) {
-		GPIO_SetHighLevel(MOTOR_PORT, GATE_AP, ENABLE);	// A+
-	}
-	if (anc >= DutyVal && anc < 20) {
-		GPIO_SetHighLevel(MOTOR_PORT, GATE_AN, ENABLE);	// A-
-	}
-	if (bpc >= DutyVal && bpc < 20) {
-		GPIO_SetHighLevel(MOTOR_PORT, GATE_BP, ENABLE);	// B+
-	}
-	if (bnc >= DutyVal && bnc < 20) {
-		GPIO_SetHighLevel(MOTOR_PORT, GATE_BN, ENABLE);	// B-
-	}
-}
-
-void PWMMatch_Rountine(void) {
-	if (apc >= DutyVal && apc < 20) {
-		GPIO_SetLowLevel(MOTOR_PORT, GATE_AP, ENABLE);	// A+
-	}
-	if (anc >= DutyVal && anc < 20) {
-		GPIO_SetLowLevel(MOTOR_PORT, GATE_AN, ENABLE);	// A-
-	}
-	if (bpc >= DutyVal && bpc < 20) {
-		GPIO_SetLowLevel(MOTOR_PORT, GATE_BP, ENABLE);	// B+
-	}
-	if (bnc >= DutyVal && bnc < 20) {
-		GPIO_SetLowLevel(MOTOR_PORT, GATE_BN, ENABLE);	// B-
-	}
 }
 
 int main(void) {
@@ -296,11 +151,6 @@ int main(void) {
 	set = 0;
 	state = 0;
 	count = 0;
-	motorState = 0;
-	apc = 0;
-	anc = 0;
-	bpc = 0;
-	bnc = 0;
 	matchVal.MatchChannel = TIM32_MATCH_CHANNEL2;
 	matchVal.IntOnMatch = FALSE;
 	matchVal.ResetOnMatch = FALSE;
@@ -314,37 +164,18 @@ int main(void) {
 
     // Initialized object
 	Init();
-/*	LPC_GPIO0->CLR |= (1 << GATE_AP)
-					| (1 << GATE_AN)
-					| (1 << GATE_BP)
-					| (1 << GATE_BN);*/
-	PWM_INIT();
 	pTempSensor.Read();
-	//MOTOR_PORT->CLR = (1 << GATE_AN);
 
     // Enter an infinite loop, just incrementing a counter
     while(1) {
         if (ObjectTick.ms1Tick) {
-        	pMotor.Tick();
+        	//pMotor.Tick();
         	//TestPWMTick();
         	pBt.Tick();
         	ObjectTick.ms1Tick = FALSE;
         }
         if (ObjectTick.ms10Tick) {
-        	//TestMotor();
-/*        	if (!start) {
-            	matchVal.MatchValue = 100;
-            	TIM32_ConfigMatch(LPC_CT32B0, &matchVal);
-            	start = 1;
-            	count = 0;
-        	}
-        	else {
-        		if (!set && (++count >= 2)) {
-        			matchVal.MatchValue = 10;
-        			TIM32_ConfigMatch(LPC_CT32B0, &matchVal);
-        			set = 1;
-        		}
-        	}*/
+
         	ObjectTick.ms10Tick = FALSE;
         }
 
@@ -366,20 +197,7 @@ int main(void) {
         }
 
         if (ObjectTick.secTick) {
-        	/*if (++DutyTh >= 20) {
-        		DutyTh = 10;
-        	}*/
-        	//pMotor.moveStep(MOVE_FF);
-        	/*if (mt) {
-        		MOTOR_PORT->CLR = (1 << GATE_BP);
-        		MOTOR_PORT->SET = (1 << GATE_BN);
-        		mt = 0;
-        	}
-        	else {
-				MOTOR_PORT ->CLR = (1 << GATE_BN);
-				MOTOR_PORT ->SET = (1 << GATE_BP);
-				mt = 1;
-        	}*/
+
         	ObjectTick.secTick = FALSE;
         }
 
@@ -424,20 +242,4 @@ void ADC_IRQHandler (void) {
 	}
 }
 
-void TIMER32_0_IRQHandler(void) {
-    uint32_t i, int_status_reg;
-
-    int_status_reg = TIM32_GetIntStatusReg (LPC_CT32B0);
-
-
-    /*clear the interrupt flag of match channel 0  */
-    if (int_status_reg & TIM32_INT_MR0) {
-    	//PWMPPeriod_Rountine();
-    	TIM32_ClearIntPendingBit(LPC_CT32B0,TIM32_INT_MR0);
-    }
-    if (int_status_reg & TIM32_INT_MR2) {
-    	PWMMatch_Rountine();
-    	TIM32_ClearIntPendingBit(LPC_CT32B0,TIM32_INT_MR2);
-    }
-}
 

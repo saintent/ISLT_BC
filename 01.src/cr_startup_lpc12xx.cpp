@@ -97,7 +97,7 @@ void WAKEUP_IRQHandler  (void) ALIAS(IntDefaultHandler);
 void I2C_IRQHandler (void) ALIAS(IntDefaultHandler);
 void TIMER16_0_IRQHandler (void) ALIAS(IntDefaultHandler);
 void TIMER16_1_IRQHandler (void) ALIAS(IntDefaultHandler);
-//void TIMER32_0_IRQHandler (void) ALIAS(IntDefaultHandler);
+void TIMER32_0_IRQHandler (void) ALIAS(IntDefaultHandler);
 void TIMER32_1_IRQHandler (void) ALIAS(IntDefaultHandler);
 void SSP_IRQHandler (void) ALIAS(IntDefaultHandler);
 void UART0_IRQHandler (void) ALIAS(IntDefaultHandler);
