@@ -9,10 +9,12 @@
 #include "string.h"
 #include "MotorControl.h"
 #include "lpc12xx_libcfg.h"
+#include "lpc12xx_ssp.h"
+#include "ssp.h"
 
 MotorControl::MotorControl() {
 	// TODO Auto-generated constructor stub
-	this->Init();
+	//this->Init();
 }
 
 MotorControl::~MotorControl() {
@@ -20,10 +22,12 @@ MotorControl::~MotorControl() {
 }
 
 void MotorControl::Init(void) {
+	//uint8_t configReg[2];
+	//uint8_t getCommand;
+	//getCommand = 0x3A;
 	// Initiate IO as Out put
 	IOCON_PIO_CFG_Type icon;
 	IOCON_StructInit(&icon);
-	icon.od = IOCON_PIO_OD_ENABLE;
 	icon.type = IOCON_PIO_0_20;
 	IOCON_SetFunc(&icon);
 	icon.type = IOCON_PIO_0_21;
@@ -32,21 +36,24 @@ void MotorControl::Init(void) {
 	IOCON_SetFunc(&icon);
 	icon.type = IOCON_PIO_0_23;
 	IOCON_SetFunc(&icon);
-	GPIO_SetDir(MOTOR_PORT, GATE_AP, 1);
-	GPIO_SetDir(MOTOR_PORT, GATE_AN, 1);
-	GPIO_SetDir(MOTOR_PORT, GATE_BP, 1);
-	GPIO_SetDir(MOTOR_PORT, GATE_BN, 1);
-	LPC_GPIO0->CLR |= (1 << GATE_AP)
-			| (1 << GATE_AN)
-			| (1 << GATE_BP)
-			| (1 << GATE_BN);
+	GPIO_SetDir(MOTOR_PORT, L6842_RESET, 1);
+	GPIO_SetDir(MOTOR_PORT, L6842_STCK, 1);
+	//GPIO_SetDir(MOTOR_PORT, GATE_BP, 1);
+	//GPIO_SetDir(MOTOR_PORT, GATE_BN, 1);
+	GPIO_SetHighLevel(MOTOR_PORT, L6842_RESET, 1);
+	SSPInit();
+
+	//SSPSendPolling(&getCommand, 1, configReg, 2);
+
+	//this->l6482Config.Word = (uint16_t)configReg[0] << 8;
+	//this->l6482Config.Word |= (uint16_t)configReg[1];
 	this->startMove = FALSE;
 	//memset(this->level, 0, 4);
 	this->level[0] = 0;
 	this->level[1] = 50;
 	this->level[2] = 100;
 	this->level[3] = 150;
-	this->movePerStep = 10;
+
 	this->speed = 60;
 	this->moveToStep = 0;
 	this->currentStep = 0;
@@ -55,6 +62,8 @@ void MotorControl::Init(void) {
 	this->processState = MOTOR_STATE_IDLE;
 	this->pendingNextState = MOTOR_STATE_IDLE;
 	this->direction = MOVE_STOP;
+
+
 }
 
 void MotorControl::Reset(void) {
@@ -262,15 +271,7 @@ void MotorControl::moveStep(MOVE_DIR_T dir, uint8_t en) {
 		// Enter State
 
 		// Process State
-		if (en) {
-			GPIO_SetHighLevel(MOTOR_PORT, GATE_AP, ENABLE);	// A+ ON
-			//GPIO_SetLowLevel(MOTOR_PORT, GATE_AN, ENABLE);	// A- OFF
-			//GPIO_SetHighLevel(MOTOR_PORT, GATE_BP, ENABLE);	// B+ ON
-			//GPIO_SetLowLevel(MOTOR_PORT, GATE_BN, ENABLE);	// B- OFF
-		}
-		else {
-			GPIO_SetLowLevel(MOTOR_PORT, GATE_AP, ENABLE);	// A+ OFF
-		}
+
 		// Move to next State
 		if (!en) {
 			if (dir == MOVE_FF) {
@@ -290,15 +291,7 @@ void MotorControl::moveStep(MOVE_DIR_T dir, uint8_t en) {
 		// Enter State
 
 		// Process State
-		if (en) {
-			//GPIO_SetHighLevel(MOTOR_PORT, GATE_AP, ENABLE);	// A+ ON
-			//GPIO_SetLowLevel(MOTOR_PORT, GATE_AN, ENABLE);	// A- OFF
-			//GPIO_SetLowLevel(MOTOR_PORT, GATE_BP, ENABLE);	// B+ OFF
-			GPIO_SetHighLevel(MOTOR_PORT, GATE_BN, ENABLE);	// B- ON
-		}
-		else {
-			GPIO_SetLowLevel(MOTOR_PORT, GATE_BN, ENABLE);	// B+ OFF
-		}
+
 		// Move to next State
 		if (!en) {
 			if (dir == MOVE_FF) {
@@ -318,15 +311,7 @@ void MotorControl::moveStep(MOVE_DIR_T dir, uint8_t en) {
 		// Enter State
 
 		// Process State
-		if (en) {
-		//GPIO_SetLowLevel(MOTOR_PORT, GATE_AP, ENABLE);	// A+ OFF
-		GPIO_SetHighLevel(MOTOR_PORT, GATE_AN, ENABLE);	// A- ON
-		//GPIO_SetLowLevel(MOTOR_PORT, GATE_BP, ENABLE);	// B+ OFF
-		//GPIO_SetHighLevel(MOTOR_PORT, GATE_BN, ENABLE);	// B- ON
-		}
-		else {
-			GPIO_SetLowLevel(MOTOR_PORT, GATE_AN, ENABLE);	// A- OFF
-		}
+
 		// Move to next State
 		if (!en) {
 			if (dir == MOVE_FF) {
@@ -346,15 +331,7 @@ void MotorControl::moveStep(MOVE_DIR_T dir, uint8_t en) {
 		// Enter State
 
 		// Process State
-		if (en) {
-		//GPIO_SetLowLevel(MOTOR_PORT, GATE_AP, ENABLE);	// A+ OFF
-		//GPIO_SetHighLevel(MOTOR_PORT, GATE_AN, ENABLE);	// A- ON
-		GPIO_SetHighLevel(MOTOR_PORT, GATE_BP, ENABLE);	// B+ ON
-		//GPIO_SetLowLevel(MOTOR_PORT, GATE_BN, ENABLE);	// B- OFF
-		}
-		else {
-			GPIO_SetLowLevel(MOTOR_PORT, GATE_BP, ENABLE);	// B+ OFF
-		}
+
 		// Move to next State
 		if (!en) {
 			if (dir == MOVE_FF) {
@@ -411,6 +388,4 @@ uint8_t MotorControl::processMove(void) {
 	return cmp;
 }
 
-void MotorControl::calcStep(uint16_t start, uint16_t end) {
 
-}

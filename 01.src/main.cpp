@@ -49,12 +49,9 @@ Heater 			pHeater;
 Valve			pValve;
 Comport			pRS485;
 Comport 		pZB;
-//MotorControl 	pMotor;
+MotorControl 	pMotor;
 TempSensor 		pTempSensor;
 IAAP			pIAAP;
-
-TIM32_MATCHTypeDef matchVal;
-TIM32_PWMTypeDef pwmCfg;
 
 void phyRS485DataIn_Callback(Uart_type port, uint8_t data) {
 	pRS485.PhyCallback(data);
@@ -120,7 +117,7 @@ void Init(void) {
 	//UARTRegDataCb(ZB_PORT, phyZBDataIn_Callback);
 	UARTRegSendCmp(RS485_PORT, phyRS485SendCmp_Callback);
 	//UARTRegSendCmp(ZB_PORT, phyZBSendCmp_Callback);
-	SSPInit();
+
 
 	// Heater Initialized hardware
 	pHeater.Init(hPort);
@@ -129,11 +126,11 @@ void Init(void) {
 	pValve.Init(lVP, rVP);
 	pValve.Valve_Control(VALVE_LEFT);
 	// Motor initialized hardware
-	//pMotor.Init();
+	pMotor.Init();
 	// Temperature initialized hardware
 	pTempSensor.Init(tTable, 101);
 	//
-	//pIAAP.Init(&pHeater, &pValve, &pMotor, &pTempSensor);
+	pIAAP.Init(&pHeater, &pValve, &pMotor, &pTempSensor);
 	pRS485.Init(&pIAAP);
 	pRS485.SetAddress(0x01);
 
@@ -145,17 +142,6 @@ void Init(void) {
 
 int main(void) {
 	//RELAY_PORT rPort;
-	uint8_t mt, start, set, state, count;
-	mt = 0;
-	start = 0;
-	set = 0;
-	state = 0;
-	count = 0;
-	matchVal.MatchChannel = TIM32_MATCH_CHANNEL2;
-	matchVal.IntOnMatch = FALSE;
-	matchVal.ResetOnMatch = FALSE;
-	matchVal.StopOnMatch = FALSE;
-	//matchVal.MatchValue = 18;
     // TODO: insert code here
 	SystemCoreClockUpdate();
 	// Set SysTick as 1 ms
@@ -164,13 +150,12 @@ int main(void) {
 
     // Initialized object
 	Init();
-	pTempSensor.Read();
+	//pTempSensor.Read();
 
     // Enter an infinite loop, just incrementing a counter
     while(1) {
         if (ObjectTick.ms1Tick) {
         	//pMotor.Tick();
-        	//TestPWMTick();
         	pBt.Tick();
         	ObjectTick.ms1Tick = FALSE;
         }
@@ -180,18 +165,6 @@ int main(void) {
         }
 
         if (ObjectTick.ms100Tick) {
-        	if (state) {
-				start = 0;
-				set = 0;
-				pwmCfg.ExtPWMOutput = ENABLE;
-				TIM32_ConfigPWM(LPC_CT32B0, &pwmCfg);
-				state = 0;
-        	}
-        	else {
-        		pwmCfg.ExtPWMOutput = DISABLE;
-        		TIM32_ConfigPWM(LPC_CT32B0, &pwmCfg);
-				state = 1;
-        	}
 
         	ObjectTick.ms100Tick = FALSE;
         }

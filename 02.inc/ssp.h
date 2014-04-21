@@ -26,7 +26,11 @@
 extern "C"
 {
 #endif
+
 void SSPInit(void);
+uint8_t SSPSend(uint8_t data);
+void SSPRecvBlockFIFO (uint8_t *pBuffer, uint32_t BufferLength);
+
 #ifdef __cplusplus
 }
 #endif

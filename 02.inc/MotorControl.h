@@ -10,12 +10,15 @@
 
 #include "stdint.h"
 #include "lpc_types.h"
+#include "l6482.h"
 
 #define MOTOR_PORT		LPC_GPIO0
-#define GATE_AP			23
-#define GATE_AN			22
-#define GATE_BP			21
-#define GATE_BN			20
+
+#define L6842_STCK		20
+#define L6842_FLAG		21
+#define L6842_RESET		22
+#define L6842_BUSY		23
+
 #define CT_TH			4
 #define CT_MAX			40
 
@@ -106,6 +109,8 @@ private :
 	 * @brief Pending Next State
 	 */
 	MOTOR_STATE_TYPT_T pendingNextState;
+
+	L6482_CONFIG_Reg l6482Config;
 public :
 	MotorControl();
 	virtual ~MotorControl();
@@ -124,7 +129,7 @@ public :
 private :
 	void moveStep(MOVE_DIR_T dir, uint8_t en);
 	uint8_t processMove(void);
-	void calcStep(uint16_t start, uint16_t end);
+	void
 };
 
 #endif /* MOTORCONTROL_H_ */

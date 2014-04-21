@@ -48,9 +48,89 @@ void SSPInit(void) {
 	SSP_init.CPOL = SSP_CPOL_HIGH;
 	SSP_init.CPHA = SSP_CPHA_SECOND;
 	SSP_init.Mode = SSP_MODE_MASTER;
-	SSP_init.ClockRate = 1000000;
+	SSP_init.ClockRate = 250000;
 	SSP_Init(&SSP_init);
+
+	//NVIC_EnableIRQ(SSP_IRQn);
 
 	SSP_Cmd (ENABLE);
 }
+
+uint8_t SSPSend(uint8_t data) {
+	uint8_t dataReturn;
+
+	/* Clear Rx FIFO */
+	while (SSP_GetStatus(SSP_STATUS_RNE ) == SET)
+		byte_r = SSP_ReceiveData();
+
+	/* Wait if Tx FIFO is not empty */
+	while (SSP_GetStatus(SSP_STATUS_TFE ) == RESET);
+
+	SSP_SendData(data);
+	while (SSP_GetStatus(SSP_STATUS_BSY ) == SET);
+
+	/* Wait to receive a byte */
+	while (SSP_GetStatus(SSP_STATUS_RNE ) == RESET);
+
+	/* Return the byte read from the SSP bus */
+	dataReturn = (uint8_t) SSP_ReceiveData();
+
+	return (dataReturn);
+}
+
+void SSPRecvBlockFIFO (uint8_t *pBuffer, uint32_t BufferLength)
+{
+	uint32_t startcnt, i;
+    uint8_t recvByte;
+
+	if ( BufferLength < SSP_FIFO_SIZE ) startcnt = BufferLength;
+    else                       startcnt = SSP_FIFO_SIZE;
+
+    /* fill TX FIFO, prepare clk for receive */
+	for ( i = startcnt; i; i-- )
+        SSP_SendData (0x00);
+
+    i = 0;
+    do {
+        while (SSP_GetStatus(SSP_STATUS_RNE) == RESET);
+        recvByte = (uint8_t)SSP_ReceiveData ();
+
+        /* fill TX FIFO, prepare clk for receive */
+        if ( i < ( BufferLength - startcnt ) )
+            SSP_SendData (0x00);
+
+        *pBuffer++ = recvByte;
+        i++;
+    } while ( i < BufferLength );
+
+}
+
+/*void SSP_IRQHandler(void)
+{
+	uint32_t i, int_status_reg;
+
+	int_status_reg = SSP_GetIntStatusReg ();
+
+     Receive overrun interrupt
+    if (int_status_reg & SSP_INT_RXOVERRUN)
+    {
+        SSP_ClearIntPendingBit (SSP_INT_RXOVERRUN);
+    }
+
+     Receive timeout interrupt
+    if (int_status_reg & SSP_INT_RXTIMEOUT)
+    {
+        SSP_ClearIntPendingBit (SSP_INT_RXTIMEOUT);
+    }
+
+     Receive halffull interrupt
+	if (int_status_reg & SSP_INT_RXHALFFULL) {
+
+	}
+
+	 Receive timeout interrupt
+	if (int_status_reg & SSP_INT_TXHALFEMPTY) {
+
+	}
+}*/
 //================ END OF FILE ==============================================//
