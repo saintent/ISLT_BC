@@ -106,6 +106,33 @@ typedef union {
 	}Bit;
 }L6482_STATUS_Reg;
 
+typedef struct {
+	uint32_t	CurrentPos;
+	uint32_t	MarkPos;
+	uint32_t	CurrentSpeed;
+	uint16_t	Acc;
+	uint16_t	Dec;
+	uint16_t	MaxSpeed;
+	uint16_t	Minspeed;
+	uint16_t	FullStepSpeed;
+	uint16_t	ElecticalPos;
+	uint8_t		HoldingRefVolt;
+	uint8_t		ConstanctRefVolt;
+	uint8_t		AccStartRefVolt;
+	uint8_t		DecStartRefVolt;
+	uint8_t		FasDecaySetting;
+	uint8_t		MinOnTime;
+	uint8_t		MinOffTime;
+	uint8_t		Adc_Out;
+	uint8_t		ODCThreshole;
+	uint8_t 	StepMode;
+	uint8_t		AlarmEnable;
+	uint16_t	GateDriverConfig1;
+	uint16_t	GateDriverConfig2;
+	L6482_CONFIG_Reg	Config;
+	L6482_STATUS_Reg	Status;
+}L6482_REG;
+
 //================ EXTERN FUNCTION ==========================================//
 #ifdef __cplusplus
 extern "C"

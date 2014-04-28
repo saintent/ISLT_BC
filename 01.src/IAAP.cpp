@@ -187,7 +187,7 @@ void IAAP::actionCMDProcess(uint8_t* Data) {
 	MOTOR_ACT_TYPE_T mActType;
 	VALVE_ACT_TYPE_T vActType;
 	HEATER_ACT_TYPE_T hActType;
-	MOVE_DIR_T mMoveDir;
+	//MOVE_DIR_T mMoveDir;
 	VALVE_DIR vDir;
 	RELAY_ST hStatus;
 	reg = (IAAR_REGISTER_T) Data[0];
@@ -196,12 +196,12 @@ void IAAP::actionCMDProcess(uint8_t* Data) {
 		mActType = (MOTOR_ACT_TYPE_T) Data[1];
 		switch (mActType) {
 		case MOTOR_ACT_MTS :
-			mMoveDir = (MOVE_DIR_T) Data[2];
+			//mMoveDir = (MOVE_DIR_T) Data[2];
 			u32Data = (uint32_t)Data[3] << 24
 					| (uint32_t)Data[4] << 16
 					| (uint32_t)Data[5] << 8
 					| (uint32_t)Data[6];
-			prMotor->MoveToStep(mMoveDir, u32Data);
+			//prMotor->MoveToStep(mMoveDir, u32Data);
 			this->genResponse(reg, SUCCESS);
 			break;
 		case MOTOR_ACT_MTL :

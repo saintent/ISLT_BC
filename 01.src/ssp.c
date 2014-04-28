@@ -61,7 +61,7 @@ uint8_t SSPSend(uint8_t data) {
 
 	/* Clear Rx FIFO */
 	while (SSP_GetStatus(SSP_STATUS_RNE ) == SET)
-		byte_r = SSP_ReceiveData();
+		dataReturn = SSP_ReceiveData();
 
 	/* Wait if Tx FIFO is not empty */
 	while (SSP_GetStatus(SSP_STATUS_TFE ) == RESET);
@@ -83,8 +83,8 @@ void SSPRecvBlockFIFO (uint8_t *pBuffer, uint32_t BufferLength)
 	uint32_t startcnt, i;
     uint8_t recvByte;
 
-	if ( BufferLength < SSP_FIFO_SIZE ) startcnt = BufferLength;
-    else                       startcnt = SSP_FIFO_SIZE;
+	if ( BufferLength < 4 ) startcnt = BufferLength;
+    else                       startcnt = 4;
 
     /* fill TX FIFO, prepare clk for receive */
 	for ( i = startcnt; i; i-- )

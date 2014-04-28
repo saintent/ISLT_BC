@@ -11,6 +11,8 @@
 #include "stdint.h"
 #include "lpc_types.h"
 #include "l6482.h"
+#include "l6482_type.h"
+
 
 #define MOTOR_PORT		LPC_GPIO0
 
@@ -25,11 +27,6 @@
 #define MAX_STEP		500
 #define MIN_STEP		0
 
-typedef enum {
-	MOVE_STOP = 0,
-	MOVE_FF,		// Move Motor Forward
-	MOVE_RW			// Move Motor Reverse
-}MOVE_DIR_T;
 
 typedef enum {
 	LEVEL_0 = 0,
@@ -62,6 +59,14 @@ typedef enum {
 	MOTOR_STATE_MOVE_FF,
 	MOTOR_STATE_MOVE_FW
 }MOTOR_STATE_TYPT_T;
+
+typedef enum {
+	MOTOR_CURRENT_2A = 0,
+	MOTOR_CURRENT_3A,
+	MOTOR_CURRENT_4A,
+	MOTOR_CURRENT_5A,
+	MOTOR_CURRENT_6A
+}MOTOR_CURRENT_LIMIT_T;
 
 class MotorControl {
 private :
@@ -96,7 +101,7 @@ private :
 	/*
 	 * @brief Move direction
 	 */
-	MOVE_DIR_T	direction;
+	//MOVE_DIR_T	direction;
 	/*
 	 * @brief Counter period
 	 */
@@ -110,7 +115,11 @@ private :
 	 */
 	MOTOR_STATE_TYPT_T pendingNextState;
 
-	L6482_CONFIG_Reg l6482Config;
+	MOTOR_CURRENT_LIMIT_T currentLimit;
+
+	L6482_REG l6482_Register;
+
+	L6482	device;
 public :
 	MotorControl();
 	virtual ~MotorControl();
@@ -119,17 +128,17 @@ public :
 	void Reset(void);
 	void Tick(void);
 	Status MoveToLevel(MOVE_LEVEL_T level);
-	Status MoveToStep(MOVE_DIR_T dir, uint32_t step);
+	//Status MoveToStep(MOVE_DIR_T dir, uint32_t step);
 	void SetLevel(MOVE_LEVEL_T level, uint16_t val);
 	void SetMPS(uint16_t val);
 	uint16_t GetMPS(void);
 	void GetMoveLevel(uint8_t* dOut, uint8_t* dSize);
 	uint16_t GetSpeed(void);
-	void ForceMove(MOVE_DIR_T dir);
+	//void ForceMove(MOVE_DIR_T dir);
 private :
-	void moveStep(MOVE_DIR_T dir, uint8_t en);
+	//void moveStep(MOVE_DIR_T dir, uint8_t en);
 	uint8_t processMove(void);
-	void
+	uint8_t	TvalTable[5];
 };
 
 #endif /* MOTORCONTROL_H_ */

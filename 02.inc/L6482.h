@@ -47,12 +47,15 @@ public:
 	uint32_t	GetMarkPosition(void);
 	uint32_t	GetSpeed(void);
 	uint16_t	GetAcceleration(void);
+	Status		SetAcceleration(uint16_t acc);
 	uint16_t	GetDeceleration(void);
+	Status		SetDeceleration(uint16_t dec);
 	uint16_t	GetMaxSpeed(void);
 	Status		SetMaxSpeed(uint16_t max);
 	uint16_t	GetMinSpeed(void);
 	Status		SetMinSpeed(uint16_t min);
 	uint16_t	GetFullStepSpeed(void);
+	Status		SetFullStepSpeed(uint16_t spd);
 	uint8_t		GetHoldingRefVolt(void);
 	Status		SetHoldingRefVolt(uint8_t volt);
 	uint8_t		GetConstanceRefVolt(void);
@@ -92,7 +95,6 @@ public:
 	Status		HardStop(void);
 	Status		SoftHiZ(void);
 	Status		HardHiZ(void);
-
 
 private :
 	Status		setParamU8(L6482_REG_Typedef reg, uint8_t value);

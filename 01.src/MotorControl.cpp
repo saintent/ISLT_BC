@@ -11,6 +11,8 @@
 #include "lpc12xx_libcfg.h"
 #include "lpc12xx_ssp.h"
 #include "ssp.h"
+#include "l6482.h"
+#include "l6482_type.h"
 
 MotorControl::MotorControl() {
 	// TODO Auto-generated constructor stub
@@ -22,9 +24,13 @@ MotorControl::~MotorControl() {
 }
 
 void MotorControl::Init(void) {
-	//uint8_t configReg[2];
-	//uint8_t getCommand;
-	//getCommand = 0x3A;
+
+	this->TvalTable[MOTOR_CURRENT_2A] = 7;
+	this->TvalTable[MOTOR_CURRENT_3A] = 10;
+	this->TvalTable[MOTOR_CURRENT_4A] = 13;
+	this->TvalTable[MOTOR_CURRENT_5A] = 16;
+	this->TvalTable[MOTOR_CURRENT_6A] = 19;
+	this->currentLimit = MOTOR_CURRENT_3A;
 	// Initiate IO as Out put
 	IOCON_PIO_CFG_Type icon;
 	IOCON_StructInit(&icon);
@@ -43,10 +49,52 @@ void MotorControl::Init(void) {
 	GPIO_SetHighLevel(MOTOR_PORT, L6842_RESET, 1);
 	SSPInit();
 
-	//SSPSendPolling(&getCommand, 1, configReg, 2);
+	// Get all register in l6482
+	this->l6482_Register.CurrentPos = device.GetCurrentPosition();
+	this->l6482_Register.ElecticalPos = device.GetElecPosition();
+	this->l6482_Register.MarkPos = device.GetMarkPosition();
+	this->l6482_Register.CurrentSpeed = device.GetSpeed();
+	// Set acc
+	device.SetAcceleration(68);
+	this->l6482_Register.Acc = device.GetAcceleration();
+	// Set dec
+	device.SetDeceleration(68);
+	this->l6482_Register.Dec = device.GetDeceleration();
+	// Set Max speed
+	device.SetMaxSpeed(13);
+	this->l6482_Register.MaxSpeed = device.GetMaxSpeed();
+	// Set Min speed
+	device.SetMinSpeed(13);
+	this->l6482_Register.Minspeed = device.GetMinSpeed();
+	// Set Full Step speed
+	device.SetFullStepSpeed(13);
+	this->l6482_Register.FullStepSpeed = device.GetFullStepSpeed();
+	// Set holding current
+	device.SetHoldingRefVolt(this->TvalTable[this->currentLimit]);
+	this->l6482_Register.HoldingRefVolt = device.GetHoldingRefVolt();
+	// Set run current
+	device.SetConstanceRefVolt(this->TvalTable[this->currentLimit]);
+	this->l6482_Register.ConstanctRefVolt = device.GetConstanceRefVolt();
+	// Set Acc current
+	device.SetAccStartRefVolt(this->TvalTable[this->currentLimit]);
+	this->l6482_Register.AccStartRefVolt = device.GetAccStartRefVolt();
+	// Set dec current
+	device.SetDeceleration(this->TvalTable[this->currentLimit]);
+	this->l6482_Register.DecStartRefVolt = device.GetDeceleration();
+	this->l6482_Register.FasDecaySetting = device.GetFastDecaySettting();
+	this->l6482_Register.MinOnTime = device.GetMinOnTime();
+	this->l6482_Register.MinOffTime = device.GetMinOffTime();
+	this->l6482_Register.Adc_Out = device.GetADCOut();
+	// Set over current
+	device.SetOCDThreshold(20);
+	this->l6482_Register.ODCThreshole = device.GetOCDThreshold();
+	this->l6482_Register.StepMode = device.GetStepMode();
+	this->l6482_Register.AlarmEnable = device.GetAlarmSetting();
+	this->l6482_Register.GateDriverConfig1 = device.GetGateDriveConfig(1);
+	this->l6482_Register.GateDriverConfig2 = device.GetGateDriveConfig(2);
+	this->l6482_Register.Config.Word = device.GetConfig();
+	this->l6482_Register.Status.Word = device.GetStatus();
 
-	//this->l6482Config.Word = (uint16_t)configReg[0] << 8;
-	//this->l6482Config.Word |= (uint16_t)configReg[1];
 	this->startMove = FALSE;
 	//memset(this->level, 0, 4);
 	this->level[0] = 0;
@@ -61,7 +109,7 @@ void MotorControl::Init(void) {
 	this->counter = 0;
 	this->processState = MOTOR_STATE_IDLE;
 	this->pendingNextState = MOTOR_STATE_IDLE;
-	this->direction = MOVE_STOP;
+	//this->direction = MOVE_STOP;
 
 
 }
@@ -75,7 +123,7 @@ void MotorControl::Tick(void) {
 	cmpStep = 0;
 	switch (this->processState) {
 	case MOTOR_STATE_IDLE :
-		// Enter State
+		/*// Enter State
 		// Initiate state
 		if (!this->startMove) {
 			this->startMove = TRUE;
@@ -100,10 +148,10 @@ void MotorControl::Tick(void) {
 					this->direction = MOVE_FF;
 				}
 			}
-		}
+		}*/
 		break;
 	case MOTOR_STATE_MOVE_FF :
-		// Enter State
+		/*// Enter State
 		// Initiate state
 		if (!this->startMove) {
 			this->startMove = TRUE;
@@ -136,10 +184,10 @@ void MotorControl::Tick(void) {
 			if (this->pendingNextState != this->processState) {
 				this->processState = this->pendingNextState;
 			}
-		}
+		}*/
 		break;
 	case MOTOR_STATE_MOVE_FW :
-		// Enter State
+		/*// Enter State
 		// Initiate state
 		if (!this->startMove) {
 			this->startMove = TRUE;
@@ -165,7 +213,7 @@ void MotorControl::Tick(void) {
 			if (this->pendingNextState != this->processState) {
 				this->processState = this->pendingNextState;
 			}
-		}
+		}*/
 		break;
 	}
 }
@@ -199,7 +247,7 @@ Status MotorControl::MoveToLevel(MOVE_LEVEL_T position) {
 	return (st);
 }
 
-Status MotorControl::MoveToStep(MOVE_DIR_T dir, uint32_t step) {
+/*Status MotorControl::MoveToStep(MOVE_DIR_T dir, uint32_t step) {
 	Status st;
 	st = ERROR;
 	direction = dir;
@@ -224,7 +272,7 @@ Status MotorControl::MoveToStep(MOVE_DIR_T dir, uint32_t step) {
 	st = SUCCESS;
 
 	return (st);
-}
+}*/
 
 void MotorControl::SetLevel(MOVE_LEVEL_T level, uint16_t val) {
 	this->level[level] = val;
@@ -247,7 +295,7 @@ uint16_t MotorControl::GetSpeed(void) {
 	return this->speed;
 }
 
-void MotorControl::ForceMove(MOVE_DIR_T dir) {
+/*void MotorControl::ForceMove(MOVE_DIR_T dir) {
 	if (dir == MOVE_STOP) {
 		this->pendingNextState = MOTOR_STATE_IDLE;
 	}
@@ -257,17 +305,18 @@ void MotorControl::ForceMove(MOVE_DIR_T dir) {
 	else {
 		this->pendingNextState = MOTOR_STATE_MOVE_FW;
 	}
-}
+}*/
 
+/*
 void MotorControl::moveStep(MOVE_DIR_T dir, uint8_t en) {
 	switch (this->stepState) {
 	case STEP_1:
-		/* Wavefrom
+		 Wavefrom
 		 *     Here
 		 * A+ |----|----|____|____|
 		 * A- |____|____|----|----|
 		 * B+ |----|____|____|----|
-		 * B- |____|----|----|____|  */
+		 * B- |____|----|----|____|
 		// Enter State
 
 		// Process State
@@ -282,12 +331,12 @@ void MotorControl::moveStep(MOVE_DIR_T dir, uint8_t en) {
 		}
 		break;
 	case STEP_2:
-		/* Wavefrom
+		 Wavefrom
 		 *          Here
 		 * A+ |----|----|____|____|
 		 * A- |____|____|----|----|
 		 * B+ |----|____|____|----|
-		 * B- |____|----|----|____|  */
+		 * B- |____|----|----|____|
 		// Enter State
 
 		// Process State
@@ -302,12 +351,12 @@ void MotorControl::moveStep(MOVE_DIR_T dir, uint8_t en) {
 		}
 		break;
 	case STEP_3:
-		/* Wavefrom
+		 Wavefrom
 		 *               Here
 		 * A+ |----|----|____|____|
 		 * A- |____|____|----|----|
 		 * B+ |----|____|____|----|
-		 * B- |____|----|----|____|  */
+		 * B- |____|----|----|____|
 		// Enter State
 
 		// Process State
@@ -322,12 +371,12 @@ void MotorControl::moveStep(MOVE_DIR_T dir, uint8_t en) {
 		}
 		break;
 	case STEP_4:
-		/* Wavefrom
+		 Wavefrom
 		 *                    Here
 		 * A+ |----|----|____|____|
 		 * A- |____|____|----|----|
 		 * B+ |----|____|____|----|
-		 * B- |____|----|----|____|  */
+		 * B- |____|----|----|____|
 		// Enter State
 
 		// Process State
@@ -345,11 +394,12 @@ void MotorControl::moveStep(MOVE_DIR_T dir, uint8_t en) {
 		break;
 	}
 }
+*/
 
 uint8_t MotorControl::processMove(void) {
 	uint8_t cmp;
 	cmp = 0;
-	switch (this->counter) {
+	/*switch (this->counter) {
 	case 0:
 		moveStep(this->direction, 1);
 		break;
@@ -383,7 +433,7 @@ uint8_t MotorControl::processMove(void) {
 		break;
 	default:
 		break;
-	}
+	}*/
 	this->counter++;
 	return cmp;
 }

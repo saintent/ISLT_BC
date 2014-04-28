@@ -9,6 +9,7 @@
 #include "L6482.h"
 #include "l6482_type.h"
 #include "lpc_types.h"
+#include "ssp.h"
 //================ PUBLIC METHOD ============================================//
 // extern function from another file
 //
@@ -51,8 +52,20 @@ uint32_t L6482::GetSpeed(void) {
 uint16_t L6482::GetAcceleration(void) {
 	return getParamU16(L6482_ACC);
 }
+Status L6482::SetAcceleration(uint16_t acc) {
+	uint8_t data[2];
+	data[1] = (uint8_t)(acc >> 8);
+	data[0] = (uint8_t)acc;
+	return setParamU16(L6482_ACC, data);
+}
 uint16_t L6482::GetDeceleration(void) {
 	return getParamU16(L6482_DEC);
+}
+Status L6482::SetDeceleration(uint16_t dec) {
+	uint8_t data[2];
+	data[1] = (uint8_t)(dec >> 8);
+	data[0] = (uint8_t)dec;
+	return setParamU16(L6482_DEC, data);
 }
 uint16_t L6482::GetMaxSpeed(void) {
 	return getParamU16(L6482_MAX_SPEED);
@@ -74,6 +87,12 @@ Status L6482::SetMinSpeed(uint16_t min) {
 }
 uint16_t L6482::GetFullStepSpeed(void) {
 	return getParamU32(L6482_FS_SPD);
+}
+Status L6482::SetFullStepSpeed(uint16_t spd) {
+	uint8_t data[2];
+	data[1] = (uint8_t)(spd >> 8);
+	data[0] = (uint8_t)spd;
+	return setParamU16(L6482_FS_SPD, data);
 }
 uint8_t L6482::GetHoldingRefVolt(void) {
 	return getParamU8(L6482_TVAL_HOLD);
@@ -161,7 +180,7 @@ Status L6482::SetGateDriveConfig(uint8_t gate, uint16_t value) {
 		result = setParamU16(L6482_GATECFG2, data);
 	}
 	else {
-		result = FALSE;
+		result = ERROR;
 	}
 	return result;
 }
@@ -169,7 +188,10 @@ uint16_t L6482::GetConfig(void) {
 	return getParamU16(L6482_CONFIG);
 }
 Status L6482::SetConfig(uint16_t value) {
-	return setParamU16(L6482_CONFIG, value);
+	uint8_t data[2];
+	data[0] = (uint8_t)(value >> 8);
+	data[1] = (uint8_t)value;
+	return setParamU16(L6482_CONFIG, data);
 }
 uint16_t L6482::GetStatus(void) {
 	return getParamU16(L6482_STATUS);
@@ -228,56 +250,56 @@ Status L6482::GoHome(void) {
 	// Assigned command
 	cmd = (uint8_t) (L6482_Goto);
 	// Send Data out
-	return sendOut(cmd, data, 1);
+	return sendOut(cmd, 0, 0);
 }
 Status L6482::GoMark(void) {
 	uint8_t cmd;
 	// Assigned command
 	cmd = (uint8_t) (L6482_GoMask);
 	// Send Data out
-	return sendOut(cmd, data, 1);
+	return sendOut(cmd, 0, 0);
 }
 Status L6482::ResetPos(void) {
 	uint8_t cmd;
 	// Assigned command
 	cmd = (uint8_t) (L6482_ResetPos);
 	// Send Data out
-	return sendOut(cmd, data, 1);
+	return sendOut(cmd, 0, 0);
 }
 Status L6482::ResetDevice(void) {
 	uint8_t cmd;
 	// Assigned command
 	cmd = (uint8_t) (L6482_ResetDevice);
 	// Send Data out
-	return sendOut(cmd, data, 1);
+	return sendOut(cmd, 0, 0);
 }
 Status L6482::SoftStop(void) {
 	uint8_t cmd;
 	// Assigned command
 	cmd = (uint8_t) (L6482_SoftStop);
 	// Send Data out
-	return sendOut(cmd, data, 1);
+	return sendOut(cmd, 0, 0);
 }
 Status L6482::HardStop(void) {
 	uint8_t cmd;
 	// Assigned command
 	cmd = (uint8_t) (L6482_HardStop);
 	// Send Data out
-	return sendOut(cmd, data, 1);
+	return sendOut(cmd, 0, 0);
 }
 Status L6482::SoftHiZ(void) {
 	uint8_t cmd;
 	// Assigned command
 	cmd = (uint8_t) (L6482_SoftHiZ);
 	// Send Data out
-	return sendOut(cmd, data, 1);
+	return sendOut(cmd, 0, 0);
 }
 Status L6482::HardHiZ(void) {
 	uint8_t cmd;
 	// Assigned command
 	cmd = (uint8_t) (L6482_HardHiZ);
 	// Send Data out
-	return sendOut(cmd, data, 1);
+	return sendOut(cmd, 0, 0);
 }
 
 Status L6482::setParamU8(L6482_REG_Typedef reg, uint8_t value) {
@@ -339,6 +361,7 @@ uint16_t L6482::getParamU16(L6482_REG_Typedef reg) {
 	uint16_t dataReturn;
 	uint8_t dataHigh;
 	uint8_t dataLow;
+	uint8_t cmd;
 
 	// Assigned command
 	cmd = (uint8_t)(L6482_GetParam);
@@ -358,7 +381,7 @@ uint32_t L6482::getParamU32(L6482_REG_Typedef reg) {
 	uint8_t dataByte2;
 	uint8_t dataByte1;
 	uint8_t	dataByte0;
-
+	uint8_t cmd;
 	// Assigned command
 	cmd = (uint8_t)(L6482_GetParam);
 	cmd |= reg;
@@ -377,6 +400,7 @@ uint32_t L6482::getParamU32(L6482_REG_Typedef reg) {
 }
 
 Status L6482::sendOut(uint8_t cmd, uint8_t* data, uint8_t len) {
+	uint8_t dataReturn;
 	dataReturn = SSPSend(cmd);
 	while (len) {
 		dataReturn = SSPSend(data[--len]);
