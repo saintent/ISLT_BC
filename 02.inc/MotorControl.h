@@ -16,10 +16,10 @@
 
 #define MOTOR_PORT		LPC_GPIO0
 
-#define L6842_STCK		20
-#define L6842_FLAG		21
-#define L6842_RESET		22
-#define L6842_BUSY		23
+#define L6482_STCK		20
+#define L6482_FLAG		21
+#define L6482_RESET		22
+#define L6482_BUSY		23
 
 #define CT_TH			4
 #define CT_MAX			40
@@ -35,12 +35,6 @@ typedef enum {
 	LEVEL_3
 }MOVE_LEVEL_T;
 
-typedef enum {
-	STEP_1 = 0,
-	STEP_2,
-	STEP_3,
-	STEP_4
-}MOTOR_SETP_T;
 
 typedef enum {
 	MOTOR_ATTR_MPS = 0,
@@ -55,12 +49,6 @@ typedef enum {
 }MOTOR_ACT_TYPE_T;
 
 typedef enum {
-	MOTOR_STATE_IDLE = 0,
-	MOTOR_STATE_MOVE_FF,
-	MOTOR_STATE_MOVE_FW
-}MOTOR_STATE_TYPT_T;
-
-typedef enum {
 	MOTOR_CURRENT_2A = 0,
 	MOTOR_CURRENT_3A,
 	MOTOR_CURRENT_4A,
@@ -71,49 +59,9 @@ typedef enum {
 class MotorControl {
 private :
 	/*
-	 * @brief Start Flag
-	 */
-	uint8_t		startMove;
-	/*
 	 * @brief Set Level of High
 	 */
-	uint16_t	level[4];
-	/*
-	 * @brief Move distance per step
-	 */
-	uint16_t	movePerStep;
-	/*
-	 * @brief Motor speed (RPM)
-	 */
-	uint16_t	speed;
-	/*
-	 * @brief Number of step to move
-	 */
-	int16_t	moveToStep;
-	/*
-	 * @brief Current step
-	 */
-	int16_t	currentStep;
-	/*
-	 * @brief Current core state
-	 */
-	MOTOR_SETP_T stepState;
-	/*
-	 * @brief Move direction
-	 */
-	//MOVE_DIR_T	direction;
-	/*
-	 * @brief Counter period
-	 */
-	uint8_t counter;
-	/*
-	 * @brief Motor process state ref MOTOR_STATE_TYPT_T
-	 */
-	MOTOR_STATE_TYPT_T processState;
-	/*
-	 * @brief Pending Next State
-	 */
-	MOTOR_STATE_TYPT_T pendingNextState;
+	uint32_t	level[4];
 
 	MOTOR_CURRENT_LIMIT_T currentLimit;
 
@@ -128,17 +76,20 @@ public :
 	void Reset(void);
 	void Tick(void);
 	Status MoveToLevel(MOVE_LEVEL_T level);
-	//Status MoveToStep(MOVE_DIR_T dir, uint32_t step);
+	Status MoveToStep(L6482_DIR_Typedef dir, uint32_t step);
 	void SetLevel(MOVE_LEVEL_T level, uint16_t val);
 	void SetMPS(uint16_t val);
 	uint16_t GetMPS(void);
 	void GetMoveLevel(uint8_t* dOut, uint8_t* dSize);
 	uint16_t GetSpeed(void);
+	Bool IsBusy(void);
 	//void ForceMove(MOVE_DIR_T dir);
 private :
 	//void moveStep(MOVE_DIR_T dir, uint8_t en);
-	uint8_t processMove(void);
+	//uint8_t processMove(void);
 	uint8_t	TvalTable[5];
+	void motorDebug(char* str,uint8_t str_len);
+	void motorPrintStatus(void);
 };
 
 #endif /* MOTORCONTROL_H_ */

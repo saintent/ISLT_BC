@@ -96,7 +96,7 @@ void IAAP::readCMDProcess(uint8_t* Data) {
 	case REG_MOTOR:
 		switch (attr) {
 		case MOTOR_ATTR_MPS :
-			u16Data = prMotor->GetMPS();
+			//u16Data = prMotor->GetMPS();
 			dOut[3] = (uint8_t) (u16Data >> 8);
 			dOut[4] = (uint8_t) u16Data;
 			dOutSize = 2;

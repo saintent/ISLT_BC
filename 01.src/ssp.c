@@ -48,7 +48,7 @@ void SSPInit(void) {
 	SSP_init.CPOL = SSP_CPOL_HIGH;
 	SSP_init.CPHA = SSP_CPHA_SECOND;
 	SSP_init.Mode = SSP_MODE_MASTER;
-	SSP_init.ClockRate = 250000;
+	SSP_init.ClockRate = 100000;
 	SSP_Init(&SSP_init);
 
 	//NVIC_EnableIRQ(SSP_IRQn);

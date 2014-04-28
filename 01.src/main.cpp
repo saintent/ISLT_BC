@@ -113,9 +113,9 @@ void Init(void) {
 	UART_RS485Init();
 	//UARTInit(ZB_PORT, 115200, ZB_LOC);
 	// Set Callback response
-	UARTRegDataCb(RS485_PORT, phyRS485DataIn_Callback);
+	//UARTRegDataCb(RS485_PORT, phyRS485DataIn_Callback);
 	//UARTRegDataCb(ZB_PORT, phyZBDataIn_Callback);
-	UARTRegSendCmp(RS485_PORT, phyRS485SendCmp_Callback);
+	//UARTRegSendCmp(RS485_PORT, phyRS485SendCmp_Callback);
 	//UARTRegSendCmp(ZB_PORT, phyZBSendCmp_Callback);
 
 

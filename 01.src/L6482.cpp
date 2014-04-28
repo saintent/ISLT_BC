@@ -54,8 +54,8 @@ uint16_t L6482::GetAcceleration(void) {
 }
 Status L6482::SetAcceleration(uint16_t acc) {
 	uint8_t data[2];
-	data[1] = (uint8_t)(acc >> 8);
-	data[0] = (uint8_t)acc;
+	data[0] = (uint8_t)(acc >> 8);
+	data[1] = (uint8_t)acc;
 	return setParamU16(L6482_ACC, data);
 }
 uint16_t L6482::GetDeceleration(void) {
@@ -63,8 +63,8 @@ uint16_t L6482::GetDeceleration(void) {
 }
 Status L6482::SetDeceleration(uint16_t dec) {
 	uint8_t data[2];
-	data[1] = (uint8_t)(dec >> 8);
-	data[0] = (uint8_t)dec;
+	data[0] = (uint8_t)(dec >> 8);
+	data[1] = (uint8_t)dec;
 	return setParamU16(L6482_DEC, data);
 }
 uint16_t L6482::GetMaxSpeed(void) {
@@ -72,8 +72,8 @@ uint16_t L6482::GetMaxSpeed(void) {
 }
 Status L6482::SetMaxSpeed(uint16_t max) {
 	uint8_t data[2];
-	data[1] = (uint8_t)(max >> 8);
-	data[0] = (uint8_t)max;
+	data[0] = (uint8_t)(max >> 8);
+	data[1] = (uint8_t)max;
 	return setParamU16(L6482_MAX_SPEED, data);
 }
 uint16_t L6482::GetMinSpeed(void) {
@@ -81,17 +81,17 @@ uint16_t L6482::GetMinSpeed(void) {
 }
 Status L6482::SetMinSpeed(uint16_t min) {
 	uint8_t data[2];
-	data[1] = (uint8_t)(min >> 8);
-	data[0] = (uint8_t)min;
+	data[0] = (uint8_t)(min >> 8);
+	data[1] = (uint8_t)min;
 	return setParamU16(L6482_MIN_SPEED, data);
 }
 uint16_t L6482::GetFullStepSpeed(void) {
-	return getParamU32(L6482_FS_SPD);
+	return getParamU16(L6482_FS_SPD);
 }
 Status L6482::SetFullStepSpeed(uint16_t spd) {
 	uint8_t data[2];
-	data[1] = (uint8_t)(spd >> 8);
-	data[0] = (uint8_t)spd;
+	data[0] = (uint8_t)(spd >> 8);
+	data[1] = (uint8_t)spd;
 	return setParamU16(L6482_FS_SPD, data);
 }
 uint8_t L6482::GetHoldingRefVolt(void) {
@@ -400,10 +400,10 @@ uint32_t L6482::getParamU32(L6482_REG_Typedef reg) {
 }
 
 Status L6482::sendOut(uint8_t cmd, uint8_t* data, uint8_t len) {
-	uint8_t dataReturn;
-	dataReturn = SSPSend(cmd);
+	//uint8_t dataReturn;
+	SSPSend(cmd);
 	while (len) {
-		dataReturn = SSPSend(data[--len]);
+		SSPSend(data[--len]);
 	}
 	return SUCCESS;
 }
