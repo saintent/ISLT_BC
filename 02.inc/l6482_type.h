@@ -96,7 +96,7 @@ typedef union {
 		uint16_t 	SW_EVN:1;
 		uint16_t	DIR:1;
 		uint16_t 	MOT_STATUS:2;
-		uint16_t	NOTPERF_CMD:2;
+		uint16_t	NOTPERF_CMD:1;
 		uint16_t	STCK_MOD:1;
 		uint16_t	UVLO:1;
 		uint16_t	UVLV_ADC:1;

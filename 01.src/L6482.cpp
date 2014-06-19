@@ -163,7 +163,7 @@ uint16_t L6482::GetGateDriveConfig(uint8_t gate) {
 		out = getParamU16(L6482_GATECFG1);
 	}
 	else if (gate == 2) {
-		out = getParamU16(L6482_GATECFG2);
+		out = getParamU8(L6482_GATECFG2);
 	}
 	else {
 		out = 0;
@@ -174,10 +174,12 @@ Status L6482::SetGateDriveConfig(uint8_t gate, uint16_t value) {
 	uint8_t data[2];
 	Status result;
 	if (gate == 1) {
+		data[0] = (value >> 8);
+		data[1] = (value);
 		result = setParamU16(L6482_GATECFG1, data);
 	}
 	else if (gate == 2) {
-		result = setParamU16(L6482_GATECFG2, data);
+		result = setParamU8(L6482_GATECFG2, (uint8_t)value);
 	}
 	else {
 		result = ERROR;
@@ -193,10 +195,6 @@ Status L6482::SetConfig(uint16_t value) {
 	data[1] = (uint8_t)value;
 	return setParamU16(L6482_CONFIG, data);
 }
-uint16_t L6482::GetStatus(void) {
-	return getParamU16(L6482_STATUS);
-}
-
 Status L6482::Run(L6482_DIR_Typedef dir, uint32_t speed) {
 	uint8_t cmd;
 	uint8_t data[3];
@@ -222,6 +220,16 @@ Status L6482::Move(L6482_DIR_Typedef dir, uint32_t step) {
 	// Send Data out
 	return sendOut(cmd, data, 3);
 }
+
+Status L6482::StepMode(L6482_DIR_Typedef dir) {
+	uint8_t cmd;
+	// Assigned command
+	cmd = (uint8_t)L6482_StepClock;
+	cmd |= dir;
+	// Send Data out
+	return sendOut(cmd, 0, 0);
+}
+
 Status L6482::GoTo(uint32_t abs_pos) {
 	uint8_t cmd;
 	uint8_t data[3];
@@ -300,6 +308,18 @@ Status L6482::HardHiZ(void) {
 	cmd = (uint8_t) (L6482_HardHiZ);
 	// Send Data out
 	return sendOut(cmd, 0, 0);
+}
+uint16_t L6482::GetStatus(void) {
+	uint8_t dataL;
+	uint8_t dataH;
+	uint8_t cmd;
+	uint16_t dataReturn;
+	cmd = (uint8_t)(L6482_GetStatus);
+	SSPSend(cmd);
+	dataH = SSPSend(0x00);
+	dataL = SSPSend(0x00);
+	dataReturn = (uint16_t)(dataH << 8) | (uint16_t)(dataL);
+	return dataReturn;
 }
 
 Status L6482::setParamU8(L6482_REG_Typedef reg, uint8_t value) {

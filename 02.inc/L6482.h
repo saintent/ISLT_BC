@@ -81,10 +81,10 @@ public:
 	Status		SetGateDriveConfig(uint8_t gate, uint16_t value);
 	uint16_t	GetConfig(void);
 	Status		SetConfig(uint16_t value);
-	uint16_t	GetStatus(void);
 
 	Status		Run(L6482_DIR_Typedef dir, uint32_t speed);
 	Status		Move(L6482_DIR_Typedef dir, uint32_t step);
+	Status		StepMode(L6482_DIR_Typedef dir);
 	Status 		GoTo(uint32_t abs_pos);
 	Status		GoToDir(L6482_DIR_Typedef dir, uint32_t abs_pos);
 	Status		GoHome(void);
@@ -95,6 +95,7 @@ public:
 	Status		HardStop(void);
 	Status		SoftHiZ(void);
 	Status		HardHiZ(void);
+	uint16_t	GetStatus(void);
 
 private :
 	Status		setParamU8(L6482_REG_Typedef reg, uint8_t value);

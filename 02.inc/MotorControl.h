@@ -12,14 +12,31 @@
 #include "lpc_types.h"
 #include "l6482.h"
 #include "l6482_type.h"
+#include "lib_fifo.h"
 
 
-#define MOTOR_PORT		LPC_GPIO0
+//#define MOTOR_PORT		LPC_GPIO1
+#define STCK_PORT		LPC_GPIO0
+#define FLAG_PORT		LPC_GPIO1
+#define RESET_PORT		LPC_GPIO1
+#define BUSY_PORT		LPC_GPIO1
 
-#define L6482_STCK		20
-#define L6482_FLAG		21
-#define L6482_RESET		22
-#define L6482_BUSY		23
+
+#define L6482_STCK		31
+#define L6482_FLAG		0
+#define L6482_RESET		1
+#define L6482_BUSY		2
+
+/*#define STCK_PORT		LPC_GPIO0
+#define FLAG_PORT		LPC_GPIO0
+#define RESET_PORT		LPC_GPIO0
+#define BUSY_PORT		LPC_GPIO0
+
+
+#define L6482_STCK		21
+#define L6482_FLAG		22
+#define L6482_RESET		20
+#define L6482_BUSY		23*/
 
 #define CT_TH			4
 #define CT_MAX			40
@@ -27,6 +44,8 @@
 #define MAX_STEP		500
 #define MIN_STEP		0
 
+#define GET_MOTOR_STA()	this->l6482_Register.Status.Word = device.GetStatus()
+#define Get_CURR_POS() this->l6482_Register.CurrentPos = device.GetCurrentPosition()
 
 typedef enum {
 	LEVEL_0 = 0,
@@ -68,6 +87,12 @@ private :
 	L6482_REG l6482_Register;
 
 	L6482	device;
+
+	uint8_t countTime;
+
+	uint8_t textDebug[32];
+	FIFO_ATTR_T debugFIFO;
+
 public :
 	MotorControl();
 	virtual ~MotorControl();
@@ -83,7 +108,9 @@ public :
 	void GetMoveLevel(uint8_t* dOut, uint8_t* dSize);
 	uint16_t GetSpeed(void);
 	Bool IsBusy(void);
+	Bool CheckAlarm(void);
 	//void ForceMove(MOVE_DIR_T dir);
+	void SendByte();
 private :
 	//void moveStep(MOVE_DIR_T dir, uint8_t en);
 	//uint8_t processMove(void);

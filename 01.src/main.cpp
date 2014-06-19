@@ -62,7 +62,8 @@ void phyZBDataIn_Callback(Uart_type port, uint8_t data) {
 }
 
 void phyRS485SendCmp_Callback(Uart_type port) {
-	pRS485.SentByte();
+	//pRS485.SentByte();
+	pMotor.SendByte();
 }
 
 void phyZBSendCmp_Callback(Uart_type port) {
@@ -70,14 +71,20 @@ void phyZBSendCmp_Callback(Uart_type port) {
 }
 
 void button_CallBack(BT_TYPE_T type, BT_STATE_TYPE_T state) {
+	Bool isBusy;
+	isBusy = pMotor.IsBusy();
 	switch (type) {
 	case BT_UP :
 		if (state == BT_STATE_PUSH) {
 			//pMotor.MoveToStep()
 			//pMotor.ForceMove(MOVE_FF);
+
 		}
 		if (state == BT_STATE_PRESS) {
 			//pMotor.ForceMove(MOVE_STOP);
+			if(isBusy == FALSE) {
+				pMotor.MoveToStep(MOVE_FF, 3200*5);
+			}
 		}
 		break;
 	case BT_DOWN :
@@ -87,16 +94,21 @@ void button_CallBack(BT_TYPE_T type, BT_STATE_TYPE_T state) {
 		}
 		else if (state == BT_STATE_PRESS) {
 			//pMotor.ForceMove(MOVE_STOP);
+			if(isBusy == FALSE) {
+				pMotor.MoveToStep(MOVE_RW, 3200*5);
+			}
 		}
 		break;
 	case BT_RIGHT :
 		if (state == BT_STATE_PRESS) {
-			pValve.Valve_Control(VALVE_RIGHT);
+			//pValve.Valve_Control(VALVE_RIGHT);
+			pHeater.Relay_Control(RELAY_OFF);
 		}
 		break;
 	case BT_LEFT :
 		if (state == BT_STATE_PRESS) {
-			pValve.Valve_Control(VALVE_LEFT);
+			//pValve.Valve_Control(VALVE_LEFT);
+			pHeater.Relay_Control(RELAY_ON);
 		}
 		break;
 	default :
@@ -110,12 +122,12 @@ void Init(void) {
 	RELAY_PORT lVP = { LPC_GPIO1, GPIO_PIN_6 };
 
 	UARTInit(RS485_PORT, 9600, RS485_LOC);
-	UART_RS485Init();
+	//UART_RS485Init();
 	//UARTInit(ZB_PORT, 115200, ZB_LOC);
 	// Set Callback response
 	//UARTRegDataCb(RS485_PORT, phyRS485DataIn_Callback);
 	//UARTRegDataCb(ZB_PORT, phyZBDataIn_Callback);
-	//UARTRegSendCmp(RS485_PORT, phyRS485SendCmp_Callback);
+	UARTRegSendCmp(RS485_PORT, phyRS485SendCmp_Callback);
 	//UARTRegSendCmp(ZB_PORT, phyZBSendCmp_Callback);
 
 
@@ -138,6 +150,8 @@ void Init(void) {
 	pBt.RegisterCallBack(button_CallBack);
 
 
+
+
 }
 
 int main(void) {
@@ -157,6 +171,7 @@ int main(void) {
         if (ObjectTick.ms1Tick) {
         	//pMotor.Tick();
         	pBt.Tick();
+        	pMotor.Tick();
         	ObjectTick.ms1Tick = FALSE;
         }
         if (ObjectTick.ms10Tick) {
