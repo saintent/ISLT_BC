@@ -192,8 +192,14 @@ void UART_StopSent(Uart_type portNumber) {
 
 Status UARTSendCh(Uart_type portNum, uint8_t ch) {
 	Status st = ERROR;
-	if(LPC_UART0->LSR & UART_LS_TX_EMPTY) {
-		LPC_UART0->THR = ch;
+	LPC_UART0_TypeDef* uptr;
+	if (portNum == UART0) {
+			uptr = (LPC_UART0_TypeDef*) LPC_UART0_BASE;
+		} else {
+			uptr = (LPC_UART0_TypeDef*) LPC_UART1_BASE;
+		}
+	if(uptr->LSR & UART_LS_TX_EMPTY) {
+		uptr->THR = ch;
 		st = SUCCESS;
 	}
 	return st;
@@ -206,7 +212,7 @@ void UART0_IRQHandler(void) {
 	IIRValue = LPC_UART0->IIR;
 	switch (IIRValue & 0x0E) {
 		case UART_INTSTAT_RX_LINE_STAT :
-			Dummy = LPC_UART1->RBR;
+			Dummy = LPC_UART0->RBR;
 		break;
 		case UART_INTSTAT_RX_DATA_AVAILABLE:
 			if (datacb[UART0] != 0) {
@@ -229,10 +235,12 @@ void UART0_IRQHandler(void) {
 void UART1_IRQHandler(void) {
 	uint8_t IIRValue;
 	uint8_t Dummy = Dummy;
+	uint8_t temp;
 
 	IIRValue = LPC_UART1->IIR;
 	switch (IIRValue & 0x0E) {
 		case UART_INTSTAT_RX_LINE_STAT :
+			temp = LPC_UART1->LSR;
 			Dummy = LPC_UART1->RBR;
 		break;
 		case UART_INTSTAT_RX_DATA_AVAILABLE:

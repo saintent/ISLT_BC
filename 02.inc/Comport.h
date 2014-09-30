@@ -33,7 +33,9 @@ typedef enum {
 typedef enum {
 	FRM_START = 0,
 	FRM_READ,
-	FRM_DONE
+	FRM_DONE,
+	FRM_GET_ADDR1,
+	FRM_GET_ADDR2
 }FRM_STATE_T;
 //================ TYPEDEF FUNCTION TYPE DEFFINITION ========================//
 
@@ -57,8 +59,8 @@ typedef struct {
 
 typedef struct {
 	uint8_t		Lenght;
-	uint8_t		Dest;
-	uint8_t		Source;
+	uint16_t	Dest;
+	uint16_t	Source;
 	uint8_t		Cmd;
 	uint8_t		PrimitiveEntry;
 }FRM_HEADER_T;
@@ -81,7 +83,7 @@ extern "C" {
 class Comport {
 private :
 	PHY_OBJECT_T	phyObj;
-	uint8_t			addr;
+	uint16_t		addr;
 	uint8_t			frmBuffer[32];
 	uint8_t			frmLength;
 	FRM_STATE_T		frmState;
@@ -89,7 +91,7 @@ private :
 public:
 	Comport();
 	virtual ~Comport();
-	Status	Init(IAAP* ptObj);
+	Status	Init(IAAP* ptObj, COM_PORT_T *pPort);
 	Bool	PendingProcess(void);
 	void	Interactive(void);
 	void	PhyCallback(uint8_t data);
@@ -100,7 +102,7 @@ private :
 	//Status		readFrame;
 	void	readFrame(FIFO_ATTR_T* pFIFO, uint8_t* pDecodeData,
 			uint8_t* pDecodeDataSize, uint8_t* pFrameCount);
-	void 	sentFrame(uint8_t dest, uint8_t cmd,
+	void 	sentFrame(uint16_t dest, uint8_t cmd,
 			uint8_t* rspFrm, uint8_t frmSize);
 };
 

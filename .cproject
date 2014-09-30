@@ -83,7 +83,7 @@
 							<tool id="com.crt.advproject.link.cpp.exe.debug.242204618" name="MCU C++ Linker" superClass="com.crt.advproject.link.cpp.exe.debug">
 								<option id="com.crt.advproject.link.cpp.arch.1453004427" name="Architecture" superClass="com.crt.advproject.link.cpp.arch" value="com.crt.advproject.link.cpp.target.cm0" valueType="enumerated"/>
 								<option id="com.crt.advproject.link.cpp.thumb.617870956" name="Thumb mode" superClass="com.crt.advproject.link.cpp.thumb" value="true" valueType="boolean"/>
-								<option id="com.crt.advproject.link.cpp.script.971260955" name="Linker script" superClass="com.crt.advproject.link.cpp.script" value="&quot;ISLT_BC_Debug.ld&quot;" valueType="string"/>
+								<option id="com.crt.advproject.link.cpp.script.971260955" name="Linker script" superClass="com.crt.advproject.link.cpp.script" value="&quot;Ispbc_Debug.ld&quot;" valueType="string"/>
 								<option id="com.crt.advproject.link.cpp.manage.913152532" name="Manage linker script" superClass="com.crt.advproject.link.cpp.manage" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.nostdlibs.953998649" name="No startup or default libs (-nostdlib)" superClass="gnu.cpp.link.option.nostdlibs" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.other.2143527890" name="Other options (-Xlinker [option])" superClass="gnu.cpp.link.option.other" valueType="stringList">
@@ -108,7 +108,7 @@
 						</tool>
 					</fileInfo>
 					<sourceEntries>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="01.src"/>
+						<entry excluding="MotorControl.cpp|L6482.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="01.src"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="02.inc"/>
 						<entry excluding="Core/CM0/DeviceSupport/NXP/LPC12xx/startup|Core/Template_DeviceSupport|Examples" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="03.lib"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="05.startup"/>
@@ -180,7 +180,7 @@
 							<tool id="com.crt.advproject.link.cpp.exe.release.1441591562" name="MCU C++ Linker" superClass="com.crt.advproject.link.cpp.exe.release">
 								<option id="com.crt.advproject.link.cpp.arch.305993210" name="Architecture" superClass="com.crt.advproject.link.cpp.arch" value="com.crt.advproject.link.cpp.target.cm0" valueType="enumerated"/>
 								<option id="com.crt.advproject.link.cpp.thumb.1359903922" name="Thumb mode" superClass="com.crt.advproject.link.cpp.thumb" value="true" valueType="boolean"/>
-								<option id="com.crt.advproject.link.cpp.script.1081580867" name="Linker script" superClass="com.crt.advproject.link.cpp.script" value="&quot;ISLT_BC_Release.ld&quot;" valueType="string"/>
+								<option id="com.crt.advproject.link.cpp.script.1081580867" name="Linker script" superClass="com.crt.advproject.link.cpp.script" value="&quot;Ispbc_Release.ld&quot;" valueType="string"/>
 								<option id="com.crt.advproject.link.cpp.manage.1491171886" name="Manage linker script" superClass="com.crt.advproject.link.cpp.manage" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.nostdlibs.491792068" name="No startup or default libs (-nostdlib)" superClass="gnu.cpp.link.option.nostdlibs" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.other.1442339846" name="Other options (-Xlinker [option])" superClass="gnu.cpp.link.option.other" valueType="stringList">

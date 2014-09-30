@@ -90,6 +90,10 @@ private :
 
 	uint8_t countTime;
 
+	uint8_t tuneTboost;
+	uint8_t tuneDTD;
+	uint8_t tuneTB;
+
 	uint8_t textDebug[32];
 	FIFO_ATTR_T debugFIFO;
 
@@ -111,6 +115,7 @@ public :
 	Bool CheckAlarm(void);
 	//void ForceMove(MOVE_DIR_T dir);
 	void SendByte();
+	void TuneGateDriver(void);
 private :
 	//void moveStep(MOVE_DIR_T dir, uint8_t en);
 	//uint8_t processMove(void);

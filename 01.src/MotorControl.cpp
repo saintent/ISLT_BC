@@ -26,7 +26,7 @@ MotorControl::~MotorControl() {
 }
 
 void MotorControl::Init(void) {
-	char str[16];
+	//char str[16];
 	this->TvalTable[MOTOR_CURRENT_2A] = 7;
 	this->TvalTable[MOTOR_CURRENT_3A] = 10;
 	this->TvalTable[MOTOR_CURRENT_4A] = 13;
@@ -110,26 +110,29 @@ void MotorControl::Init(void) {
 	this->l6482_Register.StepMode = device.GetStepMode();
 	device.SetAlarmSetting(0x01);
 	this->l6482_Register.AlarmEnable = device.GetAlarmSetting();
-	//  Gate current 64 mA, controlled current time 625ns
-	device.SetGateDriveConfig(1, (uint16_t)((3 << 5) | 0x17));
+	//  Gate current 64 mA, controlled current time 1us -> for EVAL
+	//  Gate current 24 mA, controlled current time 2us
+	device.SetGateDriveConfig(1, (uint16_t)((4 << 5) | 15));
 	this->l6482_Register.GateDriverConfig1 = device.GetGateDriveConfig(1);
-	//   Dead time : 375 ns, TBLANK : 750ns
-	device.SetGateDriveConfig(2, (uint16_t)(( 7 << 5) | 7));
-	this->l6482_Register.GateDriverConfig2 = device.GetGateDriveConfig(2);
+	//   Dead time : 375 ns, TBLANK : 1000ns
+	device.SetGateDriveConfig(2, (uint16_t)((3 << 8) | ( 2 << 5) | 7));
+	this->l6482_Register.GateDriverConfig2 = (uint8_t)device.GetGateDriveConfig(2);
 	//device.SetConfig()
 	this->l6482_Register.Config.Word = device.GetConfig();
 	//this->l6482_Register.Config.Bit.SW_MODE = 1;
 	// VCC value = 15 V.
-	this->l6482_Register.Config.Bit.VCCVAL = 1;
+	//this->l6482_Register.Config.Bit.VCCVAL = 1;
+	this->l6482_Register.Config.Bit.VCCVAL = 0;
 	// UVLO threshold = 11 V (10 V on boot).
-	this->l6482_Register.Config.Bit.UVLOVAL = 1;
+	//this->l6482_Register.Config.Bit.UVLOVAL = 1;
+	this->l6482_Register.Config.Bit.UVLOVAL = 0;
 	// Target switching time = 48 µs.
 	this->l6482_Register.Config.Bit.TSW = 20;
 	// Predictive current control enabled.
 	this->l6482_Register.Config.Bit.PRED_E = 1;
 	device.SetConfig(this->l6482_Register.Config.Word);
 	this->l6482_Register.Config.Word = device.GetConfig();
-
+	//this->
 	//motorPrintStatus();
 	GET_MOTOR_STA();
 	//device.StepMode(MOVE_FF);
@@ -351,4 +354,28 @@ void MotorControl::SendByte(void) {
 	else {
 		UART_StopSent(port);
 	}
+}
+
+void MotorControl::TuneGateDriver(void) {
+	uint16_t gateCFG1;
+	uint8_t gateCFG2;
+	uint8_t IsOK;
+	uint8_t alarm;
+	// Try to tune
+	// Clear error
+	alarm = CheckAlarm();
+
+	if (alarm != FALSE) {
+		//device.SetGateDriveConfig(1, (uint16_t) ((4 << 5) | 15));
+		//this->l6482_Register.GateDriverConfig1 = device.GetGateDriveConfig(1);
+		//   Dead time : 375 ns, TBLANK : 1000ns
+		device.SetGateDriveConfig(2, (uint16_t) ((3 << 8) | (2 << 5) | 7));
+		this->l6482_Register.GateDriverConfig2 =
+				(uint8_t) device.GetGateDriveConfig(2);
+	}
+
+
+
+
+
 }

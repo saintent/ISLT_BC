@@ -23,7 +23,7 @@
 #include "TTable.h"
 #include "IAAP.h"
 #include "lpc12xx_timer32.h"
-#include "ssp.h"
+#include "tb6600.h"
 
 // TODO: insert other include files here
 //extern void SysTick_Handler (void);
@@ -49,9 +49,11 @@ Heater 			pHeater;
 Valve			pValve;
 Comport			pRS485;
 Comport 		pZB;
-MotorControl 	pMotor;
+//MotorControl 	pMotor;
 TempSensor 		pTempSensor;
 IAAP			pIAAP;
+tb6600			pTB6600;
+uint8_t 		isButtonPress;
 
 void phyRS485DataIn_Callback(Uart_type port, uint8_t data) {
 	pRS485.PhyCallback(data);
@@ -63,7 +65,7 @@ void phyZBDataIn_Callback(Uart_type port, uint8_t data) {
 
 void phyRS485SendCmp_Callback(Uart_type port) {
 	//pRS485.SentByte();
-	pMotor.SendByte();
+	//pMotor.SendByte();
 }
 
 void phyZBSendCmp_Callback(Uart_type port) {
@@ -72,31 +74,45 @@ void phyZBSendCmp_Callback(Uart_type port) {
 
 void button_CallBack(BT_TYPE_T type, BT_STATE_TYPE_T state) {
 	Bool isBusy;
-	isBusy = pMotor.IsBusy();
+	//isBusy = pMotor.IsBusy();
 	switch (type) {
 	case BT_UP :
 		if (state == BT_STATE_PUSH) {
 			//pMotor.MoveToStep()
 			//pMotor.ForceMove(MOVE_FF);
+			isButtonPress = TRUE;
+			pTB6600.SetDir(TB6600_CW);
+			pTB6600.SetManualMode(ENABLE);
+			pTB6600.ForceActive(ENABLE);
 
 		}
 		if (state == BT_STATE_PRESS) {
 			//pMotor.ForceMove(MOVE_STOP);
-			if(isBusy == FALSE) {
+			isButtonPress = FALSE;
+			pTB6600.SetManualMode(DISABLE);
+			pTB6600.ForceActive(DISABLE);
+/*			if(isBusy == FALSE) {
 				pMotor.MoveToStep(MOVE_FF, 3200*5);
-			}
+			}*/
 		}
 		break;
 	case BT_DOWN :
 		if (state == BT_STATE_PUSH) {
 			//pMotor.MoveToStep()
 			//pMotor.ForceMove(MOVE_RW);
+			pTB6600.SetDir(TB6600_CCW);
+			pTB6600.SetManualMode(ENABLE);
+			pTB6600.ForceActive(ENABLE);
+			isButtonPress = TRUE;
 		}
 		else if (state == BT_STATE_PRESS) {
 			//pMotor.ForceMove(MOVE_STOP);
-			if(isBusy == FALSE) {
+			isButtonPress = FALSE;
+			pTB6600.SetManualMode(DISABLE);
+			pTB6600.ForceActive(DISABLE);
+/*			if(isBusy == FALSE) {
 				pMotor.MoveToStep(MOVE_RW, 3200*5);
-			}
+			}*/
 		}
 		break;
 	case BT_RIGHT :
@@ -120,15 +136,16 @@ void Init(void) {
 	RELAY_PORT hPort = { LPC_GPIO0, GPIO_PIN_19 };
 	RELAY_PORT rVP = { LPC_GPIO1, GPIO_PIN_5 };
 	RELAY_PORT lVP = { LPC_GPIO1, GPIO_PIN_6 };
+	COM_PORT_T zbPort = { UART1, UART_LOC_0, 0, 115200 };
 
-	UARTInit(RS485_PORT, 9600, RS485_LOC);
+	//UARTInit(RS485_PORT, 9600, RS485_LOC);
 	//UART_RS485Init();
-	//UARTInit(ZB_PORT, 115200, ZB_LOC);
+	UARTInit(ZB_PORT, 115200, ZB_LOC);
 	// Set Callback response
 	//UARTRegDataCb(RS485_PORT, phyRS485DataIn_Callback);
-	//UARTRegDataCb(ZB_PORT, phyZBDataIn_Callback);
-	UARTRegSendCmp(RS485_PORT, phyRS485SendCmp_Callback);
-	//UARTRegSendCmp(ZB_PORT, phyZBSendCmp_Callback);
+	UARTRegDataCb(ZB_PORT, phyZBDataIn_Callback);
+	//UARTRegSendCmp(RS485_PORT, phyRS485SendCmp_Callback);
+	UARTRegSendCmp(ZB_PORT, phyZBSendCmp_Callback);
 
 
 	// Heater Initialized hardware
@@ -138,13 +155,15 @@ void Init(void) {
 	pValve.Init(lVP, rVP);
 	pValve.Valve_Control(VALVE_LEFT);
 	// Motor initialized hardware
-	pMotor.Init();
+	//pMotor.Init();
+	pTB6600.Init();
 	// Temperature initialized hardware
 	pTempSensor.Init(tTable, 101);
 	//
-	pIAAP.Init(&pHeater, &pValve, &pMotor, &pTempSensor);
-	pRS485.Init(&pIAAP);
-	pRS485.SetAddress(0x01);
+	pIAAP.Init(&pHeater, &pValve, &pTB6600, &pTempSensor);
+	//pRS485.Init(&pIAAP);
+	//pRS485.SetAddress(0x01);
+	pZB.Init(&pIAAP, &zbPort);
 
 	pBt.Init();
 	pBt.RegisterCallBack(button_CallBack);
@@ -171,7 +190,8 @@ int main(void) {
         if (ObjectTick.ms1Tick) {
         	//pMotor.Tick();
         	pBt.Tick();
-        	pMotor.Tick();
+        	//pMotor.Tick();
+        	pTB6600.Tick();
         	ObjectTick.ms1Tick = FALSE;
         }
         if (ObjectTick.ms10Tick) {
@@ -191,6 +211,10 @@ int main(void) {
 
         if (pRS485.PendingProcess()) {
         	pRS485.Interactive();
+        }
+
+        if (pZB.PendingProcess()) {
+        	pZB.Interactive();
         }
     }
     return 0 ;

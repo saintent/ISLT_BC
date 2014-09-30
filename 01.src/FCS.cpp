@@ -6,6 +6,7 @@
 //
 //================ Include Header ===========================================//
 #include "FCS.h"
+#include "lpc_types.h"
 //================ PUBLIC METHOD ============================================//
 // extern function from another file
 //
@@ -70,8 +71,9 @@ uint8_t FCS::FcsCheck(uint8_t* u8In, uint8_t lenght) {
 	uint8_t	pos;
 	uint16_t fcsIn;
 	uint16_t fcsOut;
-	fcsIn = u8In[lenght];
-	fcsIn |= (uint16_t)((u8In[lenght-1] << 8) & 0xFF00);
+	fcsOut = 0;
+	fcsIn = u8In[lenght - 1];
+	fcsIn |= (uint16_t)((u8In[lenght - 2] << 8) & 0xFF00);
 	for(pos = 0; pos < lenght - 2; pos++) {
 		fcsOut = (fcsOut << 8)
 				^ fcstab[((fcsOut >> 8) ^ u8In[pos]) & 0xFF];
@@ -84,12 +86,12 @@ uint8_t FCS::FcsCheck(uint8_t* u8In, uint8_t lenght) {
 
 void FCS::FcsRun(uint8_t* u8In, uint8_t lenght, uint16_t* fcsOut) {
 	uint8_t	pos;
+	fcsOut[0] = 0;
 	for(pos = 0; pos < lenght - 2; pos++) {
 		fcsOut[0] = (fcsOut[0] << 8)
 				^ fcstab[((fcsOut[0] >> 8) ^ u8In[pos]) & 0xFF];
 	}
 }
-
 
 //================ END OF FILE ==============================================//
 

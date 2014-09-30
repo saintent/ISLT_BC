@@ -1,43 +1,44 @@
 //================ File Description =========================================//
-//=== File name : IAAP.h
+//=== File name : tb6600.h
 //===========================================================================//
 
-#ifndef IAAP_H_
-#define IAAP_H_
+#ifndef TB6600_H_
+#define TB6600_H_
 
 //================ Include Header ===========================================//
+#include "string.h"
+#include "stdint.h"
 #include "lpc_types.h"
-#include "Heater.h"
-#include "Valve.h"
-//#include "MotorControl.h"
-#include "tb6600.h"
+#include "lpc12xx_gpio.h"
+#include "lpc_uart.h"
 
-#include "TempSensor.h"
 //================ PULBIC DEFINE ============================================//
-//
+#define M1_PIN		31
+#define M2_PIN		0
+#define M3_PIN		1
+#define MRST_PIN	22
+#define MCLK_PIN	21
+#define MDIR_PIN	20
+#define MEN_PIN		23
+#define MTQ_PIN		3
+#define MLA_PIN		4
 //================ PUBLIC MACRO =============================================//
 //
 //================ TYPEDEF DATA TYPE DEFINITION =============================//
 //
 //================ ENUMERATOR DEFINITION ====================================//
 typedef enum {
-	CMD_ASSOCIATION = 0x01,
-	CMD_READ = 0x03,
-	CMD_WRITE = 0x07,
-	CMD_ACTION = 0x10
-}CMD_TYPE_T;
+	TB6600_TQ = 0,
+	TB6600_LA,
+	TB6600_M,
+	TB6600_EN,
+	TB6600_PSC
+}TB6600SetFn;
 
 typedef enum {
-	ASS_LOGIN = 0x01,
-	ASS_DIS = 0x02
-}ASSOCIATION_TYPE_T;
-
-typedef enum {
-	REG_MOTOR = 0x00,
-	REG_VALVE,
-	REG_HEATER,
-	REG_TEMPSENSOR
-}IAAR_REGISTER_T;
+	TB6600_CW = 0,
+	TB6600_CCW
+}TB6600Dir;
 
 //================ TYPEDEF FUNCTION TYPE DEFFINITION ========================//
 //
@@ -59,34 +60,35 @@ extern "C" {
 //
 //================ CLASS DECLARATION ========================================//
 
-class IAAP {
+class tb6600 {
 public:
+	tb6600();
+	virtual ~tb6600();
 
-public:
-	IAAP();
-	virtual ~IAAP();
-	void Init(Heater* pHeater,
-			Valve* pValve,
-			/*MotorControl* pMotor,*/
-			tb6600* pMotor,
-			TempSensor* pTempSensor);
-	void ProcessPrimitve(uint8_t* Data, uint8_t Size,
-			uint8_t* Out, uint8_t* OutSize);
+	void Init(void);
+	uint8_t Set(TB6600SetFn fn, uint8_t value);
+	uint8_t Get(TB6600SetFn fn);
+	uint32_t GetCurrentPosition(void);
+	FunctionalState EnableMotor(FunctionalState state);
+	FunctionalState ResetMotor(FunctionalState state);
+	Status SetDir(TB6600Dir dir);
+	Status Move(uint32_t step, TB6600Dir dir);
+	void SetManualMode(FunctionalState state);
+	void ForceActive(FunctionalState state);
+	void Tick(void);
 private :
-	Heater* 		prHeater;
-	Valve*			prValve;
-	//MotorControl* 	prMotor;
-	tb6600*			prMotor;
-	TempSensor*		prTempSensor;
-	uint8_t*		prOut;
-	uint8_t*		prOutSize;
-private :
-	void associateCMDProcess(uint8_t* Data);
-	void readCMDProcess(uint8_t* Data);
-	void writeCMDProcess(uint8_t* Data);
-	void actionCMDProcess(uint8_t* Data);
-	void genResponse(uint8_t reg, Status result);
+	FunctionalState tq;
+	FunctionalState la;
+	FunctionalState en;
+	uint8_t mfn;
+	uint32_t currentStep;
+	uint8_t prescale;
+	uint8_t currentClock;
+	uint32_t targetStep;
+	TB6600Dir dir;
+	uint8_t inProcess;
+	uint8_t manualMode;
 };
 
 //================ END OF FILE ==============================================//
-#endif /* IAAP_H_ */
+#endif /* TB6600_H_ */

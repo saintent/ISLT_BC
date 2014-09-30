@@ -33,7 +33,7 @@ IAAP::~IAAP() {
 	// TODO Auto-generated destructor stub
 }
 
-void IAAP::Init(Heater* pHeater, Valve* pValve, MotorControl* pMotor,
+void IAAP::Init(Heater* pHeater, Valve* pValve, tb6600* pMotor,
 		TempSensor* pTempSensor) {
 	this->prHeater = pHeater;
 	this->prValve = pValve;
@@ -95,7 +95,7 @@ void IAAP::readCMDProcess(uint8_t* Data) {
 	switch (reg) {
 	case REG_MOTOR:
 		switch (attr) {
-		case MOTOR_ATTR_MPS :
+		/*case MOTOR_ATTR_MPS :
 			//u16Data = prMotor->GetMPS();
 			dOut[3] = (uint8_t) (u16Data >> 8);
 			dOut[4] = (uint8_t) u16Data;
@@ -112,6 +112,35 @@ void IAAP::readCMDProcess(uint8_t* Data) {
 			break;
 		default :
 			dOutSize = 0;
+			break;
+		}*/
+		case 0 :
+			dOut[3] = prMotor->Get(TB6600_M);
+			dOutSize = 1;
+			break;
+		case 1 :
+			dOut[3] = prMotor->Get(TB6600_TQ);
+			dOutSize = 1;
+			break;
+		case 2 :
+			dOut[3] = prMotor->Get(TB6600_LA);
+			dOutSize = 1;
+			break;
+		case 3 :
+			dOut[3] = prMotor->Get(TB6600_EN);
+			dOutSize = 1;
+			break;
+		case 4 :
+			dOut[3] = prMotor->Get(TB6600_PSC);
+			dOutSize = 1;
+			break;
+		case 5 :
+			u32Data = prMotor->GetCurrentPosition();
+			dOut[3] = (uint8_t)(u32Data >> 24);
+			dOut[4] = (uint8_t)(u32Data >> 16);
+			dOut[5] = (uint8_t)(u32Data >> 8);
+			dOut[6] = (uint8_t)(u32Data);
+			dOutSize = 4;
 			break;
 		}
 		dOut[2] = dOutSize;
@@ -167,6 +196,30 @@ void IAAP::writeCMDProcess(uint8_t* Data) {
 	reg = (IAAR_REGISTER_T) Data[0];
 	switch (reg) {
 	case REG_MOTOR:
+		/*switch (attr) {
+		case 0 :
+			dOut[3] = prMotor->Get(TB6600_M);
+			dOutSize = 1;
+			break;
+		case 1 :
+			dOut[3] = prMotor->Get(TB6600_TQ);
+			dOutSize = 1;
+			break;
+		case 2 :
+			dOut[3] = prMotor->Get(TB6600_LA);
+			dOutSize = 1;
+			break;
+		case 3 :
+			dOut[3] = prMotor->Get(TB6600_EN);
+			dOutSize = 1;
+			break;
+		case 4 :
+			dOut[3] = prMotor->Get(TB6600_PSC);
+			dOutSize = 1;
+			break;
+		}
+		dOut[2] = dOutSize;
+		pdOutSize[0] = dOutSize + 3;*/
 		break;
 	case REG_VALVE:
 		break;
@@ -184,53 +237,32 @@ void IAAP::actionCMDProcess(uint8_t* Data) {
 	uint16_t u16Data;
 	uint32_t u32Data;
 	IAAR_REGISTER_T reg;
-	MOTOR_ACT_TYPE_T mActType;
 	VALVE_ACT_TYPE_T vActType;
 	HEATER_ACT_TYPE_T hActType;
 	//MOVE_DIR_T mMoveDir;
+	uint8_t moveDir;
 	VALVE_DIR vDir;
 	RELAY_ST hStatus;
 	reg = (IAAR_REGISTER_T) Data[0];
 	switch (reg) {
 	case REG_MOTOR:
-		mActType = (MOTOR_ACT_TYPE_T) Data[1];
-		switch (mActType) {
-		case MOTOR_ACT_MTS :
+		/*switch (mActType) {
+		case 0 :
+			moveDir = Data[2];
 			//mMoveDir = (MOVE_DIR_T) Data[2];
 			u32Data = (uint32_t)Data[3] << 24
 					| (uint32_t)Data[4] << 16
 					| (uint32_t)Data[5] << 8
 					| (uint32_t)Data[6];
 			//prMotor->MoveToStep(mMoveDir, u32Data);
+			prMotor->Move(u32Data, (TB6600Dir) moveDir);
 			this->genResponse(reg, SUCCESS);
-			break;
-		case MOTOR_ACT_MTL :
-			u8Data = Data[2];
-			if (u8Data <= LEVEL_3) {
-				prMotor->MoveToLevel((MOVE_LEVEL_T) u8Data);
-				this->genResponse(reg, SUCCESS);
-			}
-			else {
-				this->genResponse(reg, ERROR);
-			}
-			break;
-		case MOTOR_ACT_SETLV :
-			u8Data = Data[2];
-			u16Data = (uint16_t) Data[3] << 8
-					| (uint16_t) Data[4];
-			if (u8Data <= LEVEL_3) {
-				prMotor->SetLevel((MOVE_LEVEL_T) u8Data, u16Data);
-				this->genResponse(reg, SUCCESS);
-			}
-			else {
-				this->genResponse(reg, ERROR);
-			}
 			break;
 		default :
 			// Exception command
 			this->genResponse(reg, ERROR);
 			break;
-		}
+		}*/
 		break;
 	case REG_VALVE:
 		vActType = (VALVE_ACT_TYPE_T) Data[1];

@@ -33,12 +33,21 @@ Comport::~Comport() {
 	// TODO Auto-generated destructor stub
 }
 
-Status Comport::Init(IAAP* ptObj) {
+Status Comport::Init(IAAP* ptObj,COM_PORT_T* pPort) {
+	FIFO_ATTR_T* rxFIFO;
+	FIFO_ATTR_T* txFIFO;
+	uint8_t*	rxBuff;
+	uint8_t* 	txBuff;
+	rxFIFO = &this->phyObj.RxFifo;
+	txFIFO = &this->phyObj.TxFifo;
+	rxBuff = this->phyObj.RxBuff;
+	txBuff = this->phyObj.TxBuff;
+	this->phyObj.Port = *pPort;
 
 
 	//Fifo init
-	FIFO_Init(&phyObj.RxFifo, phyObj.RxBuff, 32);
-	FIFO_Init(&phyObj.TxFifo, phyObj.TxBuff, 32);
+	FIFO_Init(rxFIFO, rxBuff, 32);
+	FIFO_Init(txFIFO, txBuff, 32);
 	// Point to object class
 	this->pIAAP = ptObj;
 
@@ -69,7 +78,11 @@ void Comport::Interactive(void) {
 	uint8_t payLoadLen;
 	uint16_t fcsIn;
 	uint16_t fcsCal;
-	FRM_HEADER_T* primitive;
+	uint16_t dAddr;
+	uint16_t sAddr;
+	uint8_t primLen;
+	uint8_t primCmd;
+	FRM_HEADER_T primitive;
 	FIFO_ATTR_T* fifo;
 	fifo = &phyObj.RxFifo;
 	// Read frame
@@ -79,23 +92,29 @@ void Comport::Interactive(void) {
 	if (frmCount != 0) {
 		// Process frame
 		// Getting header info
-		primitive = (FRM_HEADER_T*) frmBuffer;
+		//primitive = (FRM_HEADER_T*) frmBuffer;
+		primLen = frmBuffer[0];
+		dAddr = (uint16_t)(frmBuffer[1]<< 8)
+				| frmBuffer[2];
+		sAddr = (uint16_t)(frmBuffer[3] << 8)
+				| frmBuffer[4];
+
 		// Check address
-		if (primitive->Dest != addr) {
+		if (dAddr != addr) {
 			goto COMPORT_INTLR;
 		}
 		// Check CRC
 		fcsIn = frmBuffer[frmLength-1];
 		fcsIn |= ((uint16_t) frmBuffer[frmLength - 2] << 8) & 0xFF00;
-		FCS::FcsRun( frmBuffer, frmLength - 2, &fcsCal);
+		FCS::FcsRun( frmBuffer, frmLength, &fcsCal);
 		if (fcsCal != fcsIn) {
 			goto COMPORT_INTLR;
 		}
 		// Correct frame
 		// Call to process
-		payLoadLen = primitive->Lenght - 5;
-		pIAAP->ProcessPrimitve(&primitive->Cmd, payLoadLen, rspFrm, &rspLen);
-		sentFrame(primitive->Source, primitive->Cmd, rspFrm, rspLen);
+		payLoadLen = primLen - 5;
+		pIAAP->ProcessPrimitve(&frmBuffer[5], payLoadLen, rspFrm, &rspLen);
+		sentFrame(sAddr, frmBuffer[5], rspFrm, rspLen);
 		COMPORT_INTLR :
 		frmState = FRM_START;
 		frmLength = 0;
@@ -146,12 +165,23 @@ void Comport::readFrame(FIFO_ATTR_T* pFIFO, uint8_t* pDecodeData,
 				//pDecodeDataSize[0]++;
 				frmState = FRM_READ;
 			}
+			else if (u8Data == '!') {
+				frmState = FRM_GET_ADDR1;
+			}
+			break;
+		case FRM_GET_ADDR1 :
+			addr = (uint16_t)(u8Data << 8);
+			frmState = FRM_GET_ADDR2;
+			break;
+		case FRM_GET_ADDR2 :
+			addr |= (uint16_t)(u8Data);
+			frmState = FRM_START;
 			break;
 		}
 	}
 }
 
-void Comport::sentFrame(uint8_t dest, uint8_t cmd,
+void Comport::sentFrame(uint16_t dest, uint8_t cmd,
 		uint8_t* rspFrm, uint8_t frmSize) {
 	uint8_t frm[64];
 	uint8_t len;
@@ -164,7 +194,9 @@ void Comport::sentFrame(uint8_t dest, uint8_t cmd,
 	frm[pos++] = STR_FRM;
 	// Jump to destination address
 	pos++;
+	frm[pos++] = (uint8_t)(dest >> 8);
 	frm[pos++] = dest;
+	frm[pos++] = (uint8_t)(addr >> 8);
 	frm[pos++] = addr;
 	frm[pos++] = cmd;
 	memcpy(&frm[pos], rspFrm, frmSize);
