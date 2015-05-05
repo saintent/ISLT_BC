@@ -70,5 +70,10 @@ VALVE_DIR Valve::GetStatus(void) {
 	return this->vDir;
 }
 
+void Valve::Valve_Disable(void) {
+	vLeft.Relay_Control(RELAY_OFF);
+	vRight.Relay_Control(RELAY_OFF);
+}
+
 //================ END OF FILE ==============================================//
 

@@ -87,6 +87,7 @@ private :
 	uint8_t			frmBuffer[32];
 	uint8_t			frmLength;
 	FRM_STATE_T		frmState;
+	uint8_t 		byteCount;
 	IAAP*			pIAAP;
 public:
 	Comport();

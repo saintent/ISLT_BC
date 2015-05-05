@@ -40,6 +40,8 @@ void button::Init(void) {
 	IOCON_PIO_CFG_Type icon;
 	IOCON_StructInit(&icon);
 	icon.od = IOCON_PIO_OD_ENABLE;
+	icon.pmode = IOCON_PIO_PMODE_DISABLE;
+	icon.pinmode = IOCON_PIO_MODE_INACTIVE;
 	icon.type = IOCON_PIO_0_3;
 	IOCON_SetFunc(&icon);
 	icon.type = IOCON_PIO_0_4;

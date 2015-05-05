@@ -42,21 +42,28 @@ tb6600::~tb6600() {
 void tb6600::Init(void) {
 	IOCON_PIO_CFG_Type iocon;
 	IOCON_StructInit(&iocon);
-	iocon.type = IOCON_PIO_0_31;
+	/*iocon.type = IOCON_PIO_0_31;
 	IOCON_SetFunc(&iocon);
 	iocon.type = IOCON_PIO_1_0;
 	IOCON_SetFunc(&iocon);
 	iocon.type = IOCON_PIO_1_1;
+	IOCON_SetFunc(&iocon);*/
+	iocon.type = IOCON_PIO_0_20;
+	iocon.od = IOCON_PIO_OD_ENABLE;
+	IOCON_SetFunc(&iocon);
+	iocon.type = IOCON_PIO_0_21;
+	IOCON_SetFunc(&iocon);
+	iocon.type = IOCON_PIO_0_22;
 	IOCON_SetFunc(&iocon);
 	GPIO_SetDir(LPC_GPIO0, MCLK_PIN, 1);
 	GPIO_SetDir(LPC_GPIO0, MDIR_PIN, 1);
 	GPIO_SetDir(LPC_GPIO0, MRST_PIN, 1);
 	GPIO_SetDir(LPC_GPIO0, MEN_PIN, 1);
-	GPIO_SetDir(LPC_GPIO0, M1_PIN, 1);
+	/*GPIO_SetDir(LPC_GPIO0, M1_PIN, 1);
 	GPIO_SetDir(LPC_GPIO1, M2_PIN, 1);
 	GPIO_SetDir(LPC_GPIO1, M3_PIN, 1);
 	GPIO_SetDir(LPC_GPIO1, MLA_PIN, 1);
-	GPIO_SetDir(LPC_GPIO1, MTQ_PIN, 1);
+	GPIO_SetDir(LPC_GPIO1, MTQ_PIN, 1);*/
 
 	this->ResetMotor(DISABLE);
 	//GPIO_SetHighLevel(LPC_GPIO0, MRST_PIN, 1);
@@ -64,21 +71,21 @@ void tb6600::Init(void) {
 	this->EnableMotor(ENABLE);
 	//GPIO_SetHighLevel(LPC_GPIO0, MEN_PIN, 1);
 
-	this->Set(TB6600_M, 0x6);
+	//this->Set(TB6600_M, 0x6);
 	/*GPIO_SetHighLevel(LPC_GPIO0, M1_PIN, 1);
 	GPIO_SetHighLevel(LPC_GPIO1, M2_PIN, 1);
 	GPIO_SetLowLevel(LPC_GPIO1, M3_PIN, 1);*/
 
-	this->Set(TB6600_TQ, DISABLE);
+	//this->Set(TB6600_TQ, DISABLE);
 	//GPIO_SetLowLevel(LPC_GPIO1, MTQ_PIN, 1);
-	this->Set(TB6600_LA, ENABLE);
+	//this->Set(TB6600_LA, ENABLE);
 	//GPIO_SetHighLevel(LPC_GPIO1, MLA_PIN, 1);
 
 	// Init High state of CLK
 	GPIO_SetHighLevel(LPC_GPIO0, 21, 1);
 
 	this->currentClock = 0;
-	this->prescale = 0;
+	this->prescale = 5;
 	this->currentStep = 0;
 	this->targetStep = 0;
 	this->dir = TB6600_CW;
@@ -218,11 +225,16 @@ Status tb6600::Move(uint32_t step, TB6600Dir dir) {
 	Status busy;
 	busy = ERROR;
 	if (!inProcess) {
+		EnableMotor(ENABLE);
+		ResetMotor(DISABLE);
 		this->SetDir(dir);
 		inProcess = TRUE;
 		if (dir == TB6600_CW) {
 			// must be implement max step
 			targetStep = currentStep + step;
+			if (targetStep > 3800) {
+				targetStep = 3800;
+			}
 		}
 		else {
 			if (currentStep < step) {
@@ -232,6 +244,9 @@ Status tb6600::Move(uint32_t step, TB6600Dir dir) {
 				targetStep = currentStep - step;
 			}
 		}
+	}
+	else {
+		busy = SUCCESS;
 	}
 	return busy;
 }
@@ -258,6 +273,9 @@ void tb6600::Tick(void) {
 				// Getting 1 clk
 				if (dir == TB6600_CW) {
 					currentStep++;
+					if (currentStep > 3800) {
+						currentStep = 3800;
+					}
 				}
 				else {
 					if (currentStep > 0) {
@@ -279,6 +297,10 @@ void tb6600::Tick(void) {
 			}
 			currentClock = 0;
 		}
+	}
+	if (currentStep == 0) {
+		EnableMotor(DISABLE);
+		ResetMotor(ENABLE);
 	}
 }
 

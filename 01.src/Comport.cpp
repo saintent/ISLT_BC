@@ -51,6 +51,11 @@ Status Comport::Init(IAAP* ptObj,COM_PORT_T* pPort) {
 	// Point to object class
 	this->pIAAP = ptObj;
 
+	this->frmLength = 0;
+	this->frmState = FRM_START;
+
+	return SUCCESS;
+
 }
 
 void Comport::SetAddress(uint8_t addr) {
@@ -101,7 +106,7 @@ void Comport::Interactive(void) {
 
 		// Check address
 		if (dAddr != addr) {
-			goto COMPORT_INTLR;
+			//goto COMPORT_INTLR;
 		}
 		// Check CRC
 		fcsIn = frmBuffer[frmLength-1];
@@ -147,11 +152,20 @@ void Comport::readFrame(FIFO_ATTR_T* pFIFO, uint8_t* pDecodeData,
 			switch (u8Data) {
 			case END_FRM :
 				// Getting end frame
-				pFrameCount[0]++;
-				frmState = FRM_DONE;
-				return;
+				if (pDecodeDataSize[0] == byteCount) {
+					pFrameCount[0]++;
+					frmState = FRM_DONE;
+					return;
+				}
+				else {
+					pDecodeData[pDecodeDataSize[0]] = u8Data;
+					pDecodeDataSize[0]++;
+				}
 				break;
 			default :
+				if (*pDecodeDataSize == 0) {
+					byteCount = u8Data;
+				}
 				// Getting frame data
 				pDecodeData[pDecodeDataSize[0]] = u8Data;
 				pDecodeDataSize[0]++;
@@ -201,8 +215,8 @@ void Comport::sentFrame(uint16_t dest, uint8_t cmd,
 	frm[pos++] = cmd;
 	memcpy(&frm[pos], rspFrm, frmSize);
 	len = frmSize + 6;
-	frm[1] = len;
-	FCS::FcsRun(&frm[1], len, &fcs);
+	frm[1] = len + 2;
+	FCS::FcsRun(&frm[1], len + 2, &fcs);
 	pos += frmSize;
 	frm[pos++] = (fcs >> 8) & 0xFF;
 	frm[pos++] = (uint8_t) fcs;

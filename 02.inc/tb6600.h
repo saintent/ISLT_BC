@@ -16,12 +16,14 @@
 #define M1_PIN		31
 #define M2_PIN		0
 #define M3_PIN		1
-#define MRST_PIN	22
+#define MRST_PIN	23
 #define MCLK_PIN	21
-#define MDIR_PIN	20
-#define MEN_PIN		23
+#define MDIR_PIN	22
+#define MEN_PIN		20
 #define MTQ_PIN		3
 #define MLA_PIN		4
+
+#define MAX_STEP	4000
 //================ PUBLIC MACRO =============================================//
 //
 //================ TYPEDEF DATA TYPE DEFINITION =============================//
@@ -39,6 +41,7 @@ typedef enum {
 	TB6600_CW = 0,
 	TB6600_CCW
 }TB6600Dir;
+
 
 //================ TYPEDEF FUNCTION TYPE DEFFINITION ========================//
 //

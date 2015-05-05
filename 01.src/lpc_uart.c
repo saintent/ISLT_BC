@@ -208,11 +208,13 @@ Status UARTSendCh(Uart_type portNum, uint8_t ch) {
 void UART0_IRQHandler(void) {
 	uint8_t IIRValue;
 	uint8_t Dummy = Dummy;
+	uint8_t temp;
 
 	IIRValue = LPC_UART0->IIR;
 	switch (IIRValue & 0x0E) {
 		case UART_INTSTAT_RX_LINE_STAT :
 			Dummy = LPC_UART0->RBR;
+			temp = LPC_UART0->LSR;
 		break;
 		case UART_INTSTAT_RX_DATA_AVAILABLE:
 			if (datacb[UART0] != 0) {

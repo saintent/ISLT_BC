@@ -57,6 +57,8 @@ public:
 	void Init(RELAY_PORT left, RELAY_PORT right);
 	VALVE_DIR Valve_Control(VALVE_DIR dir);
 	VALVE_DIR GetStatus(void);
+	//void Valve_Enable();
+	void Valve_Disable();
 private :
 	Relay 		vLeft;
 	Relay 		vRight;

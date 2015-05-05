@@ -36,7 +36,8 @@ typedef enum {
 	REG_MOTOR = 0x00,
 	REG_VALVE,
 	REG_HEATER,
-	REG_TEMPSENSOR
+	REG_TEMPSENSOR,
+	REG_STATUS
 }IAAR_REGISTER_T;
 
 //================ TYPEDEF FUNCTION TYPE DEFFINITION ========================//
@@ -73,7 +74,7 @@ public:
 	void ProcessPrimitve(uint8_t* Data, uint8_t Size,
 			uint8_t* Out, uint8_t* OutSize);
 private :
-	Heater* 		prHeater;
+	Heater* 		prHeater[3];
 	Valve*			prValve;
 	//MotorControl* 	prMotor;
 	tb6600*			prMotor;

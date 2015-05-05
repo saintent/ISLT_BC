@@ -35,7 +35,9 @@ IAAP::~IAAP() {
 
 void IAAP::Init(Heater* pHeater, Valve* pValve, tb6600* pMotor,
 		TempSensor* pTempSensor) {
-	this->prHeater = pHeater;
+	this->prHeater[0] = pHeater++;
+	this->prHeater[1] = pHeater++;
+	this->prHeater[2] = pHeater;
 	this->prValve = pValve;
 	this->prMotor = pMotor;
 	this->prTempSensor = pTempSensor;
@@ -162,8 +164,10 @@ void IAAP::readCMDProcess(uint8_t* Data) {
 	case REG_HEATER:
 		switch (attr) {
 		case HEATER_ATTR_STATUS :
-			dOut[3] = prHeater->Relay_GetSta();
-			dOutSize = 1;
+			dOut[3] = prHeater[0]->Relay_GetSta();
+			dOut[4] = prHeater[1]->Relay_GetSta();
+			dOut[5] = prHeater[2]->Relay_GetSta();
+			dOutSize = 3;
 			break;
 		default :
 			dOutSize = 0;
@@ -182,6 +186,21 @@ void IAAP::readCMDProcess(uint8_t* Data) {
 			dOutSize = 0;
 			break;
 		}
+		dOut[2] = dOutSize;
+		pdOutSize[0] = dOutSize + 3;
+		break;
+	case REG_STATUS:
+		u32Data = prMotor->GetCurrentPosition();
+		dOut[3] = (uint8_t) (u32Data >> 24);
+		dOut[4] = (uint8_t) (u32Data >> 16);
+		dOut[5] = (uint8_t) (u32Data >> 8);
+		dOut[6] = (uint8_t) (u32Data);
+		dOut[7] = prHeater[0]->Relay_GetSta();
+		dOut[8] = prHeater[1]->Relay_GetSta();
+		dOut[9] = prHeater[2]->Relay_GetSta();
+		dOut[10] = prValve->GetStatus();
+		dOut[11] = prTempSensor->GetTemp();
+		dOutSize = 9;
 		dOut[2] = dOutSize;
 		pdOutSize[0] = dOutSize + 3;
 		break;
@@ -240,13 +259,15 @@ void IAAP::actionCMDProcess(uint8_t* Data) {
 	VALVE_ACT_TYPE_T vActType;
 	HEATER_ACT_TYPE_T hActType;
 	//MOVE_DIR_T mMoveDir;
+	uint8_t mActType;
 	uint8_t moveDir;
 	VALVE_DIR vDir;
 	RELAY_ST hStatus;
 	reg = (IAAR_REGISTER_T) Data[0];
 	switch (reg) {
 	case REG_MOTOR:
-		/*switch (mActType) {
+		mActType = Data[1];
+		switch (mActType) {
 		case 0 :
 			moveDir = Data[2];
 			//mMoveDir = (MOVE_DIR_T) Data[2];
@@ -255,14 +276,19 @@ void IAAP::actionCMDProcess(uint8_t* Data) {
 					| (uint32_t)Data[5] << 8
 					| (uint32_t)Data[6];
 			//prMotor->MoveToStep(mMoveDir, u32Data);
-			prMotor->Move(u32Data, (TB6600Dir) moveDir);
-			this->genResponse(reg, SUCCESS);
+			u8Data = prMotor->Move(u32Data, (TB6600Dir) moveDir);
+			if (u8Data == 0) {
+				this->genResponse(reg, SUCCESS);
+			}
+			else {
+				this->genResponse(reg, ERROR);
+			}
 			break;
 		default :
 			// Exception command
 			this->genResponse(reg, ERROR);
 			break;
-		}*/
+		}
 		break;
 	case REG_VALVE:
 		vActType = (VALVE_ACT_TYPE_T) Data[1];
@@ -285,8 +311,37 @@ void IAAP::actionCMDProcess(uint8_t* Data) {
 		break;
 	case REG_HEATER:
 		hActType = (HEATER_ACT_TYPE_T) Data[1];
-		switch (hActType) {
-		case HEATER_ACT_CTR :
+		hStatus = (RELAY_ST)Data[2];
+		if (hActType < 3) {
+			if ((hStatus == RELAY_OFF) || (hStatus == RELAY_ON)) {
+				prHeater[hActType]->Relay_Control(hStatus);
+				this->genResponse(reg, SUCCESS);
+			} else {
+				this->genResponse(reg, ERROR);
+			}
+		}
+		/*switch (hActType) {
+		case HEATER_ACT_CTR_0 :
+			hStatus = (RELAY_ST) Data[2];
+			if ((hStatus == RELAY_OFF) || (hStatus == RELAY_ON)) {
+				prHeater[0]->Relay_Control(hStatus);
+				this->genResponse(reg, SUCCESS);
+			}
+			else {
+				this->genResponse(reg, ERROR);
+			}
+			break;
+		case HEATER_ACT_CTR_1 :
+			hStatus = (RELAY_ST) Data[2];
+			if ((hStatus == RELAY_OFF) || (hStatus == RELAY_ON)) {
+				prHeater->Relay_Control(hStatus);
+				this->genResponse(reg, SUCCESS);
+			}
+			else {
+				this->genResponse(reg, ERROR);
+			}
+			break;
+		case HEATER_ACT_CTR_2 :
 			hStatus = (RELAY_ST) Data[2];
 			if ((hStatus == RELAY_OFF) || (hStatus == RELAY_ON)) {
 				prHeater->Relay_Control(hStatus);
@@ -300,7 +355,7 @@ void IAAP::actionCMDProcess(uint8_t* Data) {
 			// Exception command
 			this->genResponse(reg, ERROR);
 			break;
-		}
+		}*/
 		break;
 	case REG_TEMPSENSOR:
 		// Exception command

@@ -24,6 +24,7 @@
 #include "IAAP.h"
 #include "lpc12xx_timer32.h"
 #include "tb6600.h"
+#include "lpc12xx_uart.h"
 
 // TODO: insert other include files here
 //extern void SysTick_Handler (void);
@@ -45,8 +46,11 @@ struct {
 
 // Object in program
 button			pBt;
-Heater 			pHeater;
+Heater 			pH1;
+Heater			pH2;
+Heater 			pH3;
 Valve			pValve;
+Valve			pValve2;
 Comport			pRS485;
 Comport 		pZB;
 //MotorControl 	pMotor;
@@ -118,13 +122,27 @@ void button_CallBack(BT_TYPE_T type, BT_STATE_TYPE_T state) {
 	case BT_RIGHT :
 		if (state == BT_STATE_PRESS) {
 			//pValve.Valve_Control(VALVE_RIGHT);
-			pHeater.Relay_Control(RELAY_OFF);
+			//pHeater.Relay_Control(RELAY_OFF);
+			if(pH1.Relay_GetSta() == RELAY_ON) {
+				pH1.Relay_Control(RELAY_OFF);
+			}
+			else {
+				pH1.Relay_Control(RELAY_ON);
+			}
 		}
 		break;
 	case BT_LEFT :
 		if (state == BT_STATE_PRESS) {
 			//pValve.Valve_Control(VALVE_LEFT);
-			pHeater.Relay_Control(RELAY_ON);
+			//pHeater.Relay_Control(RELAY_ON);
+			if(pH2.Relay_GetSta() == RELAY_ON) {
+				pH2.Relay_Control(RELAY_OFF);
+				pH3.Relay_Control(RELAY_OFF);
+			}
+			else {
+				pH2.Relay_Control(RELAY_ON);
+				pH3.Relay_Control(RELAY_ON);
+			}
 		}
 		break;
 	default :
@@ -133,35 +151,78 @@ void button_CallBack(BT_TYPE_T type, BT_STATE_TYPE_T state) {
 }
 
 void Init(void) {
-	RELAY_PORT hPort = { LPC_GPIO0, GPIO_PIN_19 };
-	RELAY_PORT rVP = { LPC_GPIO1, GPIO_PIN_5 };
-	RELAY_PORT lVP = { LPC_GPIO1, GPIO_PIN_6 };
+	Heater* hArry[3];
+	IOCON_PIO_CFG_Type iocon;
+	IOCON_StructInit(&iocon);
+	iocon.type = IOCON_PIO_0_31;
+	IOCON_SetFunc(&iocon);
+	iocon.type = IOCON_PIO_1_0;
+	IOCON_SetFunc(&iocon);
+	iocon.type = IOCON_PIO_1_1;
+	IOCON_SetFunc(&iocon);
+	iocon.type = IOCON_PIO_1_2;
+	IOCON_SetFunc(&iocon);
+	iocon.type = IOCON_PIO_1_3;
+	IOCON_SetFunc(&iocon);
+	RELAY_PORT hPort1 = { LPC_GPIO0, GPIO_PIN_31 };
+	RELAY_PORT hPort2 = { LPC_GPIO1, GPIO_PIN_0 };
+	RELAY_PORT hPort3 = { LPC_GPIO1, GPIO_PIN_1 };
+	RELAY_PORT rVP1 = { LPC_GPIO1, GPIO_PIN_2 };
+	RELAY_PORT lVP1 = { LPC_GPIO1, GPIO_PIN_3 };
+	RELAY_PORT rVP = { LPC_GPIO1, GPIO_PIN_4 };
+	RELAY_PORT lVP = { LPC_GPIO1, GPIO_PIN_5 };
 	COM_PORT_T zbPort = { UART1, UART_LOC_0, 0, 115200 };
+	COM_PORT_T rsPort = { UART0, UART_LOC_0, 0, 38400 };
 
-	//UARTInit(RS485_PORT, 9600, RS485_LOC);
-	//UART_RS485Init();
+
+	//SYS_ResetPeripheral(SYS_PRESETCTRL_UART1_RST, DISABLE);
+
+	UARTInit(RS485_PORT, 38400, RS485_LOC);
+	UART_RS485Init();
+	/*UART_CFG_Type ucfg;
+	UART_Init((LPC_UART_TypeDef *)LPC_UART1);
+	UART_GetConfig((LPC_UART_TypeDef *)LPC_UART1, &ucfg);
+	ucfg.baudrate = 115200;
+	UART_SetConfig((LPC_UART_TypeDef *)LPC_UART1, &ucfg);
+	SetupUART_Location(ZB_PORT, ZB_LOC);
+	UART_ConfigInts((LPC_UART_TypeDef *)LPC_UART1, UART_INTCFG_RBR, ENABLE);*/
+	//SYS_ResetPeripheral(SYS_PRESETCTRL_UART1_RST, ENABLE);
 	UARTInit(ZB_PORT, 115200, ZB_LOC);
+
 	// Set Callback response
-	//UARTRegDataCb(RS485_PORT, phyRS485DataIn_Callback);
+	UARTRegDataCb(RS485_PORT, phyRS485DataIn_Callback);
 	UARTRegDataCb(ZB_PORT, phyZBDataIn_Callback);
 	//UARTRegSendCmp(RS485_PORT, phyRS485SendCmp_Callback);
 	UARTRegSendCmp(ZB_PORT, phyZBSendCmp_Callback);
 
 
 	// Heater Initialized hardware
-	pHeater.Init(hPort);
-	pHeater.Relay_Control(RELAY_ON);
+	pH1.Init(hPort1);
+	pH2.Init(hPort2);
+	pH3.Init(hPort3);
+
+	//pH1.Relay_Control(RELAY_ON);
+	//pH2.Relay_Control(RELAY_ON);
+	//pH3.Relay_Control(RELAY_ON);
+
+	hArry[0] = &pH1;
+	hArry[1] = &pH2;
+	hArry[2] = &pH3;
+	//pHeater.Relay_Control(RELAY_ON);
 	// Valve initialized hardware
 	pValve.Init(lVP, rVP);
-	pValve.Valve_Control(VALVE_LEFT);
+	//pValve.Valve_Control(VALVE_LEFT);
+	pValve.Valve_Disable();
+	pValve2.Init(lVP1,rVP1);
+	pValve2.Valve_Disable();
 	// Motor initialized hardware
 	//pMotor.Init();
 	pTB6600.Init();
 	// Temperature initialized hardware
 	pTempSensor.Init(tTable, 101);
 	//
-	pIAAP.Init(&pHeater, &pValve, &pTB6600, &pTempSensor);
-	//pRS485.Init(&pIAAP);
+	pIAAP.Init(hArry[0], &pValve, &pTB6600, &pTempSensor);
+	pRS485.Init(&pIAAP, &rsPort);
 	//pRS485.SetAddress(0x01);
 	pZB.Init(&pIAAP, &zbPort);
 
@@ -183,7 +244,7 @@ int main(void) {
 
     // Initialized object
 	Init();
-	//pTempSensor.Read();
+	//
 
     // Enter an infinite loop, just incrementing a counter
     while(1) {
@@ -205,7 +266,9 @@ int main(void) {
         }
 
         if (ObjectTick.secTick) {
-
+        	pTempSensor.Read();
+        	//UARTSendCh(RS485_PORT, pTempSensor.GetTemp());
+        	//UARTSendCh(ZB_PORT, pTempSensor.GetTemp());
         	ObjectTick.secTick = FALSE;
         }
 
@@ -250,7 +313,9 @@ void ADC_IRQHandler (void) {
 	if(reg & ADC_ADINT) {
 		// Channel 0
 		adcVal = ADC_GetData(ADC_CHANNEL_0);
+		pTempSensor.calTemp(adcVal);
 		TempSensor::ReadCallback(&pTempSensor, adcVal);
+		//UARTSendCh(RS485_PORT, pTempSensor.GetTemp());
 	}
 }
 

@@ -19,7 +19,9 @@ typedef enum {
 }HEATER_ATTR_TYPE_T;
 
 typedef enum {
-	HEATER_ACT_CTR = 0
+	HEATER_ACT_CTR_0 = 0,
+	HEATER_ACT_CTR_1,
+	HEATER_ACT_CTR_2
 }HEATER_ACT_TYPE_T;
 //================ TYPEDEF FUNCTION TYPE DEFFINITION ========================//
 //

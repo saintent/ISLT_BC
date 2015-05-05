@@ -53,14 +53,16 @@ public:
 	Adc_Status Read();
 	uint16_t GetValue(void);
 	uint8_t GetTemp(void);
+	void calTemp(uint16_t val);
 private :
-	void calTemp(void);
-private :
+	void calAverage(void);
 	uint16_t* tempTable;
 	uint8_t	 taempTableSize;
 	Adc_Status onRead;
 	uint16_t value;
 	uint8_t	tempValue;
+	uint8_t tempValueMove[32];
+	uint8_t tempSlot;
 
 };
 
