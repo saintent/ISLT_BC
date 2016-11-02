@@ -25,6 +25,7 @@
 #include "lpc12xx_timer32.h"
 #include "tb6600.h"
 #include "lpc12xx_uart.h"
+#include "DMXSlave.h"
 
 // TODO: insert other include files here
 //extern void SysTick_Handler (void);
@@ -46,6 +47,8 @@ struct {
 	uint8_t rsv[2];
 }ObjectTick;
 
+void DMXFrameReceivedComplete(uint16_t ch);
+
 // Object in program
 button			pBt;
 Heater 			pH1;
@@ -53,26 +56,31 @@ Heater			pH2;
 Heater 			pH3;
 Valve			pValve;
 Valve			pValve2;
-Comport			pRS485;
+//Comport			pRS485;
 Comport 		pZB;
 //MotorControl 	pMotor;
 TempSensor 		pTempSensor;
 IAAP			pIAAP;
 tb6600			pTB6600;
+dmx::DMXSlave	dmxSlave(1, 8, DMXFrameReceivedComplete);
+
 uint8_t 		isButtonPress;
 
-void phyRS485DataIn_Callback(Uart_type port, uint8_t data) {
-	pRS485.PhyCallback(data);
+void DMXFrameReceivedComplete(uint16_t ch) {
+
 }
 
+void DMXDataRecv_CallBack(Uart_type port, uint8_t data) {
+	dmx::DMXSlave::OnRecviceFrame(&dmxSlave, uart::eUartRecvData, data);
+}
+
+
+void DMXBreakInt_CallBack(Uart_type port) {
+	dmx::DMXSlave::OnRecviceFrame(&dmxSlave, uart::eUartBreakInt, 0);
+}
 
 void phyZBDataIn_Callback(Uart_type port, uint8_t data) {
 	pZB.PhyCallback(data);
-}
-
-void phyRS485SendCmp_Callback(Uart_type port) {
-	//pRS485.SentByte();
-	//pMotor.SendByte();
 }
 
 void phyZBSendCmp_Callback(Uart_type port) {
@@ -175,12 +183,12 @@ void Init(void) {
 	RELAY_PORT rVP = { LPC_GPIO1, GPIO_PIN_4 };
 	RELAY_PORT lVP = { LPC_GPIO1, GPIO_PIN_5 };
 	COM_PORT_T zbPort = { UART1, UART_LOC_0, 0, 38400 };
-	COM_PORT_T rsPort = { UART0, UART_LOC_0, 0, 38400 };
+	//COM_PORT_T rsPort = { UART0, UART_LOC_0, 0, 38400 };
 
 
 	//SYS_ResetPeripheral(SYS_PRESETCTRL_UART1_RST, DISABLE);
 
-	UARTInit(RS485_PORT, 38400, RS485_LOC);
+	UARTInit(RS485_PORT, 250000, RS485_LOC);
 	UART_RS485Init();
 	/*UART_CFG_Type ucfg;
 	UART_Init((LPC_UART_TypeDef *)LPC_UART1);
@@ -193,7 +201,8 @@ void Init(void) {
 	UARTInit(ZB_PORT, 38400, ZB_LOC);
 
 	// Set Callback response
-	UARTRegDataCb(RS485_PORT, phyRS485DataIn_Callback);
+	UARTRegDataCb(RS485_PORT, DMXDataRecv_CallBack);
+	UARTRegBreakIntCallback(RS485_PORT, DMXBreakInt_CallBack);
 	UARTRegDataCb(ZB_PORT, phyZBDataIn_Callback);
 	//UARTRegSendCmp(RS485_PORT, phyRS485SendCmp_Callback);
 	UARTRegSendCmp(ZB_PORT, phyZBSendCmp_Callback);
@@ -225,7 +234,7 @@ void Init(void) {
 	pTempSensor.Init(tTable, 101);
 	//
 	pIAAP.Init(hArry[0], &pValve, &pTB6600, &pTempSensor);
-	pRS485.Init(&pIAAP, &rsPort);
+	//pRS485.Init(&pIAAP, &rsPort);
 	//pRS485.SetAddress(0x01);
 	pZB.Init(&pIAAP, &zbPort);
 
@@ -282,10 +291,6 @@ int main(void) {
         	//UARTSendCh(RS485_PORT, pTempSensor.GetTemp());
         	//UARTSendCh(ZB_PORT, pTempSensor.GetTemp());
         	ObjectTick.secTick = FALSE;
-        }
-
-        if (pRS485.PendingProcess()) {
-        	pRS485.Interactive();
         }
 
         if (pZB.PendingProcess()) {
