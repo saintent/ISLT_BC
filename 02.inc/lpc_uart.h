@@ -154,6 +154,7 @@ typedef enum {
 typedef void DataCallback_t(Uart_type t, uint8_t data);
 typedef void SendCmp_t(Uart_type t);
 typedef void ChTimeout_t(Uart_type t);
+typedef void BreakIntCallback_t(Uart_type t);
 //================ EXTERN FUNCTION ==========================================//
 #ifdef __cplusplus
 extern "C"
@@ -166,6 +167,7 @@ void UART_RS485Init(void);
 void UARTRegDataCb(Uart_type portNum, DataCallback_t* cb);
 void UARTRegSendCmp(Uart_type portNum, SendCmp_t* cb);
 void UARTRegChTimeOut(Uart_type portNum, ChTimeout_t* cb);
+void UARTRegBreakIntCallback(Uart_type portNum, BreakIntCallback_t* cb);
 void UARTUnRegDataCb(Uart_type portNum);
 void UARTUnRegSendCmpCb(Uart_type portNum);
 void UARTUnRegChTimeOutCb(Uart_type portNum);

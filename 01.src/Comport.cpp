@@ -156,11 +156,14 @@ void Comport::readFrame(FIFO_ATTR_T* pFIFO, uint8_t* pDecodeData,
 					pFrameCount[0]++;
 					frmState = FRM_DONE;
 					return;
+
 				}
+
 				else {
 					pDecodeData[pDecodeDataSize[0]] = u8Data;
 					pDecodeDataSize[0]++;
 				}
+
 				break;
 			default :
 				if (*pDecodeDataSize == 0) {

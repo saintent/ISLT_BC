@@ -31,12 +31,14 @@
 //extern void ADC_IRQHandler (void);
 // TODO: insert other definitions and declarations here
 struct {
+	uint8_t Tick1ms;
 	uint8_t Tick10ms;
 	uint8_t Tick100ms;
 	uint8_t Tick1sec;
 	uint8_t rsv;
 }TickTime;
 struct {
+	uint8_t us10Tick;
 	uint8_t ms1Tick;
 	uint8_t ms10Tick;
 	uint8_t ms100Tick;
@@ -62,6 +64,7 @@ uint8_t 		isButtonPress;
 void phyRS485DataIn_Callback(Uart_type port, uint8_t data) {
 	pRS485.PhyCallback(data);
 }
+
 
 void phyZBDataIn_Callback(Uart_type port, uint8_t data) {
 	pZB.PhyCallback(data);
@@ -171,7 +174,7 @@ void Init(void) {
 	RELAY_PORT lVP1 = { LPC_GPIO1, GPIO_PIN_3 };
 	RELAY_PORT rVP = { LPC_GPIO1, GPIO_PIN_4 };
 	RELAY_PORT lVP = { LPC_GPIO1, GPIO_PIN_5 };
-	COM_PORT_T zbPort = { UART1, UART_LOC_0, 0, 115200 };
+	COM_PORT_T zbPort = { UART1, UART_LOC_0, 0, 38400 };
 	COM_PORT_T rsPort = { UART0, UART_LOC_0, 0, 38400 };
 
 
@@ -187,7 +190,7 @@ void Init(void) {
 	SetupUART_Location(ZB_PORT, ZB_LOC);
 	UART_ConfigInts((LPC_UART_TypeDef *)LPC_UART1, UART_INTCFG_RBR, ENABLE);*/
 	//SYS_ResetPeripheral(SYS_PRESETCTRL_UART1_RST, ENABLE);
-	UARTInit(ZB_PORT, 115200, ZB_LOC);
+	UARTInit(ZB_PORT, 38400, ZB_LOC);
 
 	// Set Callback response
 	UARTRegDataCb(RS485_PORT, phyRS485DataIn_Callback);
@@ -238,8 +241,8 @@ int main(void) {
 	//RELAY_PORT rPort;
     // TODO: insert code here
 	SystemCoreClockUpdate();
-	// Set SysTick as 1 ms
-	SysTick_Config( SystemCoreClock / (1000 - 1));
+	// Set SysTick as 10 us
+	SysTick_Config( SystemCoreClock / (10000 - 1));
 	// Initialized parameter
 
     // Initialized object
@@ -248,11 +251,20 @@ int main(void) {
 
     // Enter an infinite loop, just incrementing a counter
     while(1) {
-        if (ObjectTick.ms1Tick) {
-        	//pMotor.Tick();
-        	pBt.Tick();
-        	//pMotor.Tick();
+    	if (ObjectTick.us10Tick) {
+//#ifndef BMODEL
         	pTB6600.Tick();
+//#endif
+        	ObjectTick.us10Tick = FALSE;
+    	}
+
+        if (ObjectTick.ms1Tick) {
+        	pBt.Tick();
+/*
+#ifdef BMODEL
+        	pTB6600.Tick();
+#endif
+*/
         	ObjectTick.ms1Tick = FALSE;
         }
         if (ObjectTick.ms10Tick) {
@@ -284,23 +296,28 @@ int main(void) {
 }
 
 void SysTick_Handler(void) {
-	// 1 ms Routine
-	ObjectTick.ms1Tick = TRUE;
-	if (++TickTime.Tick10ms >= 10) {
-		// 10 ms Routine
-		ObjectTick.ms10Tick = TRUE;
-		if (++TickTime.Tick100ms >= 10) {
-			// 100 ms Routing
-			//ObjectTick.ms100Tick = TRUE;
-			if (++TickTime.Tick1sec >= 10) {
-				// 1 sec Routing
-				ObjectTick.secTick = TRUE;
-				//UARTSendCh(RS485_PORT, 'U');
-				TickTime.Tick1sec = 0;
+
+	ObjectTick.us10Tick = TRUE;
+	if (++TickTime.Tick1ms >= 10) {
+		// 1 ms Routine
+		ObjectTick.ms1Tick = TRUE;
+		if (++TickTime.Tick10ms >= 10) {
+			// 10 ms Routine
+			ObjectTick.ms10Tick = TRUE;
+			if (++TickTime.Tick100ms >= 10) {
+				// 100 ms Routing
+				//ObjectTick.ms100Tick = TRUE;
+				if (++TickTime.Tick1sec >= 10) {
+					// 1 sec Routing
+					ObjectTick.secTick = TRUE;
+					//UARTSendCh(RS485_PORT, 'U');
+					TickTime.Tick1sec = 0;
+				}
+				TickTime.Tick100ms = 0;
 			}
-			TickTime.Tick100ms = 0;
+			TickTime.Tick10ms = 0;
 		}
-		TickTime.Tick10ms = 0;
+		TickTime.Tick1ms = 0;
 	}
 }
 
@@ -312,6 +329,7 @@ void ADC_IRQHandler (void) {
 	// Interrupt flag
 	if(reg & ADC_ADINT) {
 		// Channel 0
+
 		adcVal = ADC_GetData(ADC_CHANNEL_0);
 		pTempSensor.calTemp(adcVal);
 		TempSensor::ReadCallback(&pTempSensor, adcVal);

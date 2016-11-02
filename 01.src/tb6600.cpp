@@ -85,7 +85,7 @@ void tb6600::Init(void) {
 	GPIO_SetHighLevel(LPC_GPIO0, 21, 1);
 
 	this->currentClock = 0;
-	this->prescale = 5;
+	this->prescale = PSPEED;
 	this->currentStep = 0;
 	this->targetStep = 0;
 	this->dir = TB6600_CW;
@@ -232,8 +232,8 @@ Status tb6600::Move(uint32_t step, TB6600Dir dir) {
 		if (dir == TB6600_CW) {
 			// must be implement max step
 			targetStep = currentStep + step;
-			if (targetStep > 3800) {
-				targetStep = 3800;
+			if (targetStep > MAX_STEP) {
+				targetStep = MAX_STEP;
 			}
 		}
 		else {
@@ -268,40 +268,48 @@ void tb6600::Tick(void) {
 	// if use pre-scale
 	if (inProcess) {
 		if (++currentClock >= prescale) {
-			LPC_GPIO0 ->NOT = 1 << 21;
-			if (GPIO_GetPinValue(LPC_GPIO0, 21) == TRUE) {
-				// Getting 1 clk
-				if (dir == TB6600_CW) {
-					currentStep++;
-					if (currentStep > 3800) {
-						currentStep = 3800;
+			if ((currentStep >= MAX_STEP) && (dir != TB6600_CCW)) {
+				currentStep = MAX_STEP;
+				inProcess = FALSE;
+			}
+			else if ((currentStep == 0)&& (dir != TB6600_CW)){
+				inProcess = FALSE;
+			}
+			else {
+				LPC_GPIO0 ->NOT = 1 << 21;
+				if (GPIO_GetPinValue(LPC_GPIO0, 21) == TRUE) {
+					// Getting 1 clk
+					if (dir == TB6600_CW) {
+						currentStep++;
+						if (currentStep > MAX_STEP) {
+							currentStep = MAX_STEP;
+							inProcess = FALSE;
+						}
+					} else {
+						if (currentStep > 0) {
+							currentStep--;
+						}
 					}
-				}
-				else {
-					if (currentStep > 0) {
-						currentStep--;
+					if (!manualMode) {
+						if (currentStep == targetStep) {
+							// complete
+							inProcess = FALSE;
+						}
 					}
-				}
-				if (!manualMode) {
-					if (currentStep == targetStep) {
-						// complete
+					// Min step
+					if (currentStep == 0) {
 						inProcess = FALSE;
 					}
+					// Max step
 				}
-				// Min step
-				if (currentStep == 0) {
-					inProcess = FALSE;
-				}
-				// Max step
-
 			}
 			currentClock = 0;
 		}
 	}
-	if (currentStep == 0) {
+	/*if (currentStep == 0) {
 		EnableMotor(DISABLE);
 		ResetMotor(ENABLE);
-	}
+	}*/
 }
 
 //================ END OF FILE ==============================================//

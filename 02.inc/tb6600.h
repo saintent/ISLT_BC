@@ -23,7 +23,14 @@
 #define MTQ_PIN		3
 #define MLA_PIN		4
 
-#define MAX_STEP	4000
+#define BMODEL
+#ifdef BMODEL
+#define MAX_STEP	35000*5
+#define PSPEED		0
+#else
+#define MAX_STEP	60700//25000*7
+#define PSPEED		0
+#endif
 //================ PUBLIC MACRO =============================================//
 //
 //================ TYPEDEF DATA TYPE DEFINITION =============================//

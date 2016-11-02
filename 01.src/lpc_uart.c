@@ -26,6 +26,7 @@
 DataCallback_t* datacb[UART_MAX];
 SendCmp_t* sndCmpcb[UART_MAX];
 ChTimeout_t* chTmcb[UART_MAX];
+BreakIntCallback_t* blIntcb[UART_MAX];
 //================ PRIVATE DEFINE ===========================================//
 extern void UART0_IRQHandler(void);
 extern void UART1_IRQHandler(void);
@@ -143,6 +144,11 @@ void UARTRegSendCmp(Uart_type portNum, SendCmp_t* cb) {
 void UARTRegChTimeOut(Uart_type portNum, ChTimeout_t* cb) {
 	chTmcb[portNum] = cb;
 }
+
+void UARTRegBreakIntCallback(Uart_type portNum, BreakIntCallback_t* cb) {
+	blIntcb[portNum] = cb;
+}
+
 void UARTUnRegDataCb(Uart_type portNum) {
 	datacb[portNum] = 0;
 }
@@ -208,13 +214,24 @@ Status UARTSendCh(Uart_type portNum, uint8_t ch) {
 void UART0_IRQHandler(void) {
 	uint8_t IIRValue;
 	uint8_t Dummy = Dummy;
-	uint8_t temp;
+	uint8_t lsrVal;
 
 	IIRValue = LPC_UART0->IIR;
 	switch (IIRValue & 0x0E) {
 		case UART_INTSTAT_RX_LINE_STAT :
 			Dummy = LPC_UART0->RBR;
-			temp = LPC_UART0->LSR;
+			lsrVal = LPC_UART0->LSR;
+			if (lsrVal & UART_LS_BREAK_INT) {
+				if (blIntcb[UART0] != 0) {
+					blIntcb[UART0](UART0);
+				}
+			}
+			else if (lsrVal & UART_LS_RX_DATA_READY) {
+				if (datacb[UART0] != 0) {
+					datacb[UART0](UART0, LPC_UART0 ->RBR);
+				}
+			}
+
 		break;
 		case UART_INTSTAT_RX_DATA_AVAILABLE:
 			if (datacb[UART0] != 0) {
