@@ -1,33 +1,56 @@
-/** \file DMXBase.h
+/** \file MotionControl.h
  *	\brief 
  */
 
-#ifndef DMXBASE_H_
-#define DMXBASE_H_
+#ifndef MOTIONCONTROL_H_
+#define MOTIONCONTROL_H_
 
 // ---------- SYSTEM INCLUDE --------------------------------------------------------------------- //
 #include "stdint.h"
-#include "DMXFrame.h"
-#include "uartEvent.h"
-using namespace uart;
+#include "MotorControl.h"
+#include "Display7Segment.h"
 // ---------- EXTERNAL MODULE INCLUDE ------------------------------------------------------------ //
 // N/A
 // ---------- PUBLIC PROGRAMMING DEFINE ---------------------------------------------------------- //
 // N/A
 // ---------- ENUMERATOR DEFINITION -------------------------------------------------------------- //
-namespace dmx {
-	enum eDmxState {
-        dmxWaitForStart,
-        dmxWaitStartAddress,
-		dmxWaitforHandlerChannel,
-        dmxRecvData,
-        dmxFrameReady,
+namespace Motion {
+	enum ControlState {
+		DCMode,
+		SolMode,
+		IncMode,
+		AbsMode,
+		LoopMode,
+		SetupDC,
+		SetupSol,
+		SetupInc,
+		SetupAbs,
+		SetupLoop
+	};
+
+	enum SetupParameter {
+		SP_SpeedFW,
+		SP_SpeedFR,
+		SP_Position,
+		SP_Speed,
+		SP_Output,
+		SP_Delay,
+	};
+
+	enum OutputMode {
+		NotUse,
+		ON,
+		OFF,
+		Pulse
 	};
 }
 // ---------- TYPEDEF DATA TYPE DEFINITION ------------------------------------------------------- //
-typedef void dmxEvent_onFrameReceived(uint16_t channel);
-// ---------- STRUCT OR UNION DATA TYPE DEFINITION ----------------------------------------------- //
 // N/A
+// ---------- STRUCT OR UNION DATA TYPE DEFINITION ----------------------------------------------- //
+typedef struct {
+	uint32_t	speed;
+	uint32_t 	acc;
+};
 // ---------- PUBLIC MACRO DEFINITION ------------------------------------------------------------ //
 // N/A
 // ---------- EXTERN FUNCTION -------------------------------------------------------------------- //
@@ -35,35 +58,24 @@ typedef void dmxEvent_onFrameReceived(uint16_t channel);
 // ---------- EXTERN VARIABLE -------------------------------------------------------------------- //
 // N/A
 // ---------- CLASS DECLARATION ----------------------------------------------------------------- //
-namespace dmx {
+namespace Motion {
+
 /*
  *
  */
-class DMXBase {
+class MotionControl {
 public:
-	DMXBase() { };
-	DMXBase(uint8_t startChannel, uint8_t channelSpan, dmxEvent_onFrameReceived* callback = 0);
-	virtual ~DMXBase(void);
+	MotionControl();
+	virtual ~MotionControl();
 
-	uint8_t GetChannelValue(uint16_t channel);
-
-	static void OnRecviceFrame(void* obj, eUartEvent event, uint8_t data);
 private:
-	void OnReceiveProcess(eUartEvent event, uint8_t data);
-
-public:
-	DMXFrame					frame;
-protected:
-	dmxEvent_onFrameReceived* 	onFrameReceived;
-	uint16_t 					startChannel;
-	uint16_t 					currentRevcChannel;
-	eDmxState					state;
-	uint8_t 					channelSpan;
+	Display7Segment*		display;
+	MOTOR::MotorControl* 	motor;
+	ControlState			controlState;
 
 };
 
-}
-
+} /* namespace Motion */
 // ---------- END OF CLASS DECLARATION ---------------------------------------------------------- //
 
-#endif /* DMXBASE_H_ */
+#endif /* MOTIONCONTROL_H_ */

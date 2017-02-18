@@ -26,6 +26,7 @@
 #include "tb6600.h"
 #include "lpc12xx_uart.h"
 #include "DMXSlave.h"
+#include "LPCTimer.h"
 
 // TODO: insert other include files here
 //extern void SysTick_Handler (void);
@@ -63,17 +64,24 @@ TempSensor 		pTempSensor;
 IAAP			pIAAP;
 tb6600			pTB6600;
 dmx::DMXSlave	dmxSlave(1, 8, DMXFrameReceivedComplete);
-
+uint8_t ch8_value;
 uint8_t 		isButtonPress;
 
 void DMXFrameReceivedComplete(uint16_t ch) {
-
+	if (ch == 9) {
+		ch8_value = dmxSlave.GetChannelValue(1);
+		if (ch8_value > 200) {
+			pH1.Relay_Control(RELAY_ON);
+		}
+		else {
+			pH1.Relay_Control(RELAY_OFF);
+		}
+	}
 }
 
 void DMXDataRecv_CallBack(Uart_type port, uint8_t data) {
 	dmx::DMXSlave::OnRecviceFrame(&dmxSlave, uart::eUartRecvData, data);
 }
-
 
 void DMXBreakInt_CallBack(Uart_type port) {
 	dmx::DMXSlave::OnRecviceFrame(&dmxSlave, uart::eUartBreakInt, 0);
@@ -241,8 +249,11 @@ void Init(void) {
 	pBt.Init();
 	pBt.RegisterCallBack(button_CallBack);
 
+	dmxSlave.frame.SetFrameSize(8);
 
 
+	//lpcTimer.Init(100);
+	//lpcTimer.SetEventCallBack(TimerEvent_Callback);
 
 }
 

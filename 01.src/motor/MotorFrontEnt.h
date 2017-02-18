@@ -1,31 +1,20 @@
-/** \file DMXBase.h
+/** \file MotorFrontEnt.h
  *	\brief 
  */
 
-#ifndef DMXBASE_H_
-#define DMXBASE_H_
+#ifndef MOTORFRONTENT_H_
+#define MOTORFRONTENT_H_
 
 // ---------- SYSTEM INCLUDE --------------------------------------------------------------------- //
-#include "stdint.h"
-#include "DMXFrame.h"
-#include "uartEvent.h"
-using namespace uart;
+//
 // ---------- EXTERNAL MODULE INCLUDE ------------------------------------------------------------ //
 // N/A
 // ---------- PUBLIC PROGRAMMING DEFINE ---------------------------------------------------------- //
 // N/A
 // ---------- ENUMERATOR DEFINITION -------------------------------------------------------------- //
-namespace dmx {
-	enum eDmxState {
-        dmxWaitForStart,
-        dmxWaitStartAddress,
-		dmxWaitforHandlerChannel,
-        dmxRecvData,
-        dmxFrameReady,
-	};
-}
+// N/A
 // ---------- TYPEDEF DATA TYPE DEFINITION ------------------------------------------------------- //
-typedef void dmxEvent_onFrameReceived(uint16_t channel);
+// N/A
 // ---------- STRUCT OR UNION DATA TYPE DEFINITION ----------------------------------------------- //
 // N/A
 // ---------- PUBLIC MACRO DEFINITION ------------------------------------------------------------ //
@@ -35,35 +24,18 @@ typedef void dmxEvent_onFrameReceived(uint16_t channel);
 // ---------- EXTERN VARIABLE -------------------------------------------------------------------- //
 // N/A
 // ---------- CLASS DECLARATION ----------------------------------------------------------------- //
-namespace dmx {
+namespace MOTOR {
+
 /*
  *
  */
-class DMXBase {
+class MotorFrontEnt {
 public:
-	DMXBase() { };
-	DMXBase(uint8_t startChannel, uint8_t channelSpan, dmxEvent_onFrameReceived* callback = 0);
-	virtual ~DMXBase(void);
-
-	uint8_t GetChannelValue(uint16_t channel);
-
-	static void OnRecviceFrame(void* obj, eUartEvent event, uint8_t data);
-private:
-	void OnReceiveProcess(eUartEvent event, uint8_t data);
-
-public:
-	DMXFrame					frame;
-protected:
-	dmxEvent_onFrameReceived* 	onFrameReceived;
-	uint16_t 					startChannel;
-	uint16_t 					currentRevcChannel;
-	eDmxState					state;
-	uint8_t 					channelSpan;
-
+	MotorFrontEnt();
+	virtual ~MotorFrontEnt();
 };
 
-}
-
+} /* namespace MOTOR */
 // ---------- END OF CLASS DECLARATION ---------------------------------------------------------- //
 
-#endif /* DMXBASE_H_ */
+#endif /* MOTORFRONTENT_H_ */

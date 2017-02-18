@@ -46,7 +46,7 @@ public:
 	uint8_t &operator[](uint16_t index);
 
 private:
-	uint8_t* pDataFrame;
+	uint8_t pDataFrame[16];
 	uint16_t frameSize;
 	uint16_t currentCh;
 
