@@ -64,18 +64,6 @@ void MotorControl::Init() {
 
 	timer.Init(1000);
 	timer.SetEventCallBack(TimerEvent_Callback);
-#ifdef ARDUINO
-	// Timer/Counter 1 in mode 4 CTC (Not running).
-	// Timer/Counter 1 Output Compare A Match Interrupt enable.
-	cli();
-	TCCR1A |= //(1 << COM1A1) | (1 << COM1A0) |
-			(1 << COM1B1) | (1 << COM1B0) | (1 << WGM10);
-	TCCR1B = 1 << WGM13; // | 2;
-	TIMSK1 = (1 << TOIE1) | (1 << OCIE1B);
-	OCR1A = 0;
-	OCR1B = 0;
-	sei();
-#endif
 
 }
 
@@ -103,11 +91,6 @@ void MotorControl::Move(int32_t step, uint32_t accel, uint32_t decel,
 		// Just a short delay so main() can act on 'running'.
 		this->stepDelay = 1000;
 		//status.running = TRUE;
-
-		/*OCR1A = 10;
-		 // Run Timer/Counter 1 with prescaler = 8.
-		 TCCR1B |= ((0 << CS12) | (1 << CS11) | (0 << CS10));
-		 */
 	}
 	// Only move if number of steps to move is not zero.
 	else if (step != 0) {
@@ -164,51 +147,14 @@ void MotorControl::Move(int32_t step, uint32_t accel, uint32_t decel,
 
 		// Reset counter.
 		this->accelCount = 0;
-#ifdef ARDUINO
-		Serial.println("runState : " + String(runState));
-		Serial.println("direction : " + String(direction));
-		Serial.println("stepPosition : " + String(stepPosition));
-		Serial.println("stepDelay : " + String(stepDelay));
-		Serial.println("decelStart : " + String(decelStart));
-		Serial.println("decelVal : " + String(decelVal));
-		Serial.println("minDelay : " + String(minDelay));
-		Serial.println("accelCount : " + String(accelCount));
-		Serial.println("lastAccelDelay : " + String(lastAccelDelay));
-		Serial.println("stepCount : " + String(stepCount));
-		Serial.println("rest : " + String(rest));
-
-		OCR1A = this->stepDelay;
-		OCR1B = this->stepDelay / 2;
-
-		Serial.print("OCR1A : ");
-		Serial.print(OCR1A, DEC);
-		Serial.print("\tOCR1B : ");
-		Serial.println(OCR1B, DEC);
-#endif
 		timer.SetMatch(this->stepDelay);
 		StartTimer();
 
-		/*OCR1A = 10;
-		 // Set Timer/Counter to divide clock by 8
-		 TCCR1B |= ((0 << CS12) | (1 << CS11) | (0 << CS10));
-		 */
 	}
 }
 
 void MotorControl::Callback(MotorControl* obj) {
 	obj->Process();
-	/*Serial.print("runState : " + String(obj->runState));
-	 //Serial.println("direction : " + String(obj->direction));
-	 //Serial.println("stepPosition : " + String(obj->stepPosition));
-	 Serial.print("\tstepDelay : " + String(obj->stepDelay));
-	 //Serial.println("decelStart : " + String(obj->decelStart));
-	 //Serial.println("decelVal : " + String(obj->decelVal));
-	 //Serial.println("minDelay : " + String(obj->minDelay));
-	 Serial.print("\taccelCount : " + String(obj->accelCount));
-	 Serial.print("\tlastAccelDelay : " + String(obj->lastAccelDelay));
-	 Serial.print("\tstepCount : " + String(obj->stepCount));
-	 Serial.println("\trest : " + String(obj->rest));*/
-	//Serial.println(obj->stepCount);
 }
 
 } /* end of namespace MOTOR */
@@ -226,15 +172,6 @@ void MotorControl::Process() {
 	//static unsigned int rest = 0;
 
 	timer.SetMatch(this->stepDelay);
-#ifdef ARDUINO
-	OCR1A = this->stepDelay;
-	OCR1B = this->stepDelay / 2;
-
-	/*Serial.print("OCR1A : ");
-	 Serial.print(OCR1A, DEC);
-	 Serial.print("\tOCR1B : ");
-	 Serial.println(OCR1B, DEC);*/
-#endif
 
 	switch (this->runState) {
 	case SPS_Stop:
@@ -243,7 +180,6 @@ void MotorControl::Process() {
 		this->rest = 0;
 
 		// Stop Timer/Counter 1.
-		//TCCR1B &= ~((1 << CS12) | (1 << CS11) | (1 << CS10));
 		StopTimer();
 		break;
 
@@ -311,29 +247,13 @@ void MotorControl::Process() {
 
 void MotorControl::StartTimer() {
 	timer.Start();
-	//TCCR1B |= 2;
 }
 
 void MotorControl::StopTimer() {
-	//TCCR1B &= 0xF8;
 	timer.Stop();
 }
 
 } /* end of namespace MOTOR */
-
-#ifndef MOTION_IMPLEMENT_ISR
-ISR (TIMER1_OVF_vect) {
-	//PORTD ^= 1 << 6;
-	PORTD ^= 1 << 7;
-	MOTOR::MotorControl::Callback (&motionControl);
-
-}
-
-ISR (TIMER1_COMPB_vect) {
-	PORTD ^= 1 << 6;
-	//MotorControl::CallBack(&motionControl);
-}
-#endif
 
 /*! \brief Square root routine.
  *

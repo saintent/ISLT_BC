@@ -18,7 +18,7 @@
 #include "valve.h"
 #include "comport.h"
 #include "relay.h"
-#include "MotorControl.h"
+#include "motor/MotionControl.h"
 #include "TempSensor.h"
 #include "TTable.h"
 #include "IAAP.h"
@@ -59,7 +59,7 @@ Valve			pValve;
 Valve			pValve2;
 //Comport			pRS485;
 Comport 		pZB;
-//MotorControl 	pMotor;
+MOTOR::MotorControl 	pMotor;
 TempSensor 		pTempSensor;
 IAAP			pIAAP;
 tb6600			pTB6600;
@@ -68,15 +68,12 @@ uint8_t ch8_value;
 uint8_t 		isButtonPress;
 
 void DMXFrameReceivedComplete(uint16_t ch) {
-	if (ch == 9) {
-		ch8_value = dmxSlave.GetChannelValue(1);
-		if (ch8_value > 200) {
-			pH1.Relay_Control(RELAY_ON);
-		}
-		else {
-			pH1.Relay_Control(RELAY_OFF);
-		}
+	if (dmxSlave.GetChannelValue(1) > 200) {
+		pH1.Relay_Control(RELAY_ON);
+	} else {
+		pH1.Relay_Control(RELAY_OFF);
 	}
+
 }
 
 void DMXDataRecv_CallBack(Uart_type port, uint8_t data) {
@@ -133,6 +130,7 @@ void button_CallBack(BT_TYPE_T type, BT_STATE_TYPE_T state) {
 			isButtonPress = FALSE;
 			pTB6600.SetManualMode(DISABLE);
 			pTB6600.ForceActive(DISABLE);
+			pMotor.Move(20, 100, 100, 1000);
 /*			if(isBusy == FALSE) {
 				pMotor.MoveToStep(MOVE_RW, 3200*5);
 			}*/
@@ -142,6 +140,7 @@ void button_CallBack(BT_TYPE_T type, BT_STATE_TYPE_T state) {
 		if (state == BT_STATE_PRESS) {
 			//pValve.Valve_Control(VALVE_RIGHT);
 			//pHeater.Relay_Control(RELAY_OFF);
+			pMotor.Move(100, 100, 100, 1000);
 			if(pH1.Relay_GetSta() == RELAY_ON) {
 				pH1.Relay_Control(RELAY_OFF);
 			}
@@ -154,6 +153,7 @@ void button_CallBack(BT_TYPE_T type, BT_STATE_TYPE_T state) {
 		if (state == BT_STATE_PRESS) {
 			//pValve.Valve_Control(VALVE_LEFT);
 			//pHeater.Relay_Control(RELAY_ON);
+			pMotor.Move(50, 1000, 1000, 10000);
 			if(pH2.Relay_GetSta() == RELAY_ON) {
 				pH2.Relay_Control(RELAY_OFF);
 				pH3.Relay_Control(RELAY_OFF);
@@ -198,14 +198,6 @@ void Init(void) {
 
 	UARTInit(RS485_PORT, 250000, RS485_LOC);
 	UART_RS485Init();
-	/*UART_CFG_Type ucfg;
-	UART_Init((LPC_UART_TypeDef *)LPC_UART1);
-	UART_GetConfig((LPC_UART_TypeDef *)LPC_UART1, &ucfg);
-	ucfg.baudrate = 115200;
-	UART_SetConfig((LPC_UART_TypeDef *)LPC_UART1, &ucfg);
-	SetupUART_Location(ZB_PORT, ZB_LOC);
-	UART_ConfigInts((LPC_UART_TypeDef *)LPC_UART1, UART_INTCFG_RBR, ENABLE);*/
-	//SYS_ResetPeripheral(SYS_PRESETCTRL_UART1_RST, ENABLE);
 	UARTInit(ZB_PORT, 38400, ZB_LOC);
 
 	// Set Callback response
@@ -236,8 +228,8 @@ void Init(void) {
 	pValve2.Init(lVP1,rVP1);
 	pValve2.Valve_Disable();
 	// Motor initialized hardware
-	//pMotor.Init();
-	pTB6600.Init();
+	pMotor.Init();
+	//pTB6600.Init();
 	// Temperature initialized hardware
 	pTempSensor.Init(tTable, 101);
 	//
@@ -254,6 +246,8 @@ void Init(void) {
 
 	//lpcTimer.Init(100);
 	//lpcTimer.SetEventCallBack(TimerEvent_Callback);
+
+	pMotor.Move(100, 1000, 1000, 10000);
 
 }
 
@@ -299,8 +293,6 @@ int main(void) {
 
         if (ObjectTick.secTick) {
         	pTempSensor.Read();
-        	//UARTSendCh(RS485_PORT, pTempSensor.GetTemp());
-        	//UARTSendCh(ZB_PORT, pTempSensor.GetTemp());
         	ObjectTick.secTick = FALSE;
         }
 

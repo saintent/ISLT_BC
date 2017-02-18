@@ -102,6 +102,14 @@
 							<tool id="com.crt.advproject.link.exe.debug.1030798783" name="MCU Linker" superClass="com.crt.advproject.link.exe.debug"/>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="com.crt.advproject.config.exe.debug.1300134347.1279620184" name="MotorControl.h" rcbsApplicability="disable" resourcePath="02.inc/MotorControl.h" toolsToInvoke="">
+						<tool customBuildStep="true" id="org.eclipse.cdt.managedbuilder.ui.rcbs.1709344601" name="Resource Custom Build Step">
+							<inputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.inputtype.1835301885" name="Resource Custom Build Step Input Type">
+								<additionalInput kind="additionalinputdependency" paths=""/>
+							</inputType>
+							<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.130872422" name="Resource Custom Build Step Output Type"/>
+						</tool>
+					</fileInfo>
 					<fileInfo id="com.crt.advproject.config.exe.debug.1300134347.1379361906" name="MotionControl.h" rcbsApplicability="disable" resourcePath="01.src/motor/MotionControl.h" toolsToInvoke=""/>
 					<fileInfo id="com.crt.advproject.config.exe.debug.1300134347.01.src/cr_startup_lpc12xx.cpp" name="cr_startup_lpc12xx.cpp" rcbsApplicability="disable" resourcePath="01.src/cr_startup_lpc12xx.cpp" toolsToInvoke="com.crt.advproject.cpp.exe.debug.213087430.587317129">
 						<tool id="com.crt.advproject.cpp.exe.debug.213087430.587317129" name="MCU C++ Compiler" superClass="com.crt.advproject.cpp.exe.debug.213087430">
@@ -111,7 +119,7 @@
 					</fileInfo>
 					<sourceEntries>
 						<entry excluding="motor/MotionControl.h|motor/MotionControl.cpp|MotorControl.cpp|L6482.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="01.src"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="02.inc"/>
+						<entry excluding="MotorControl.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="02.inc"/>
 						<entry excluding="Core/CM0/DeviceSupport/NXP/LPC12xx/startup|Core/Template_DeviceSupport|Examples" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="03.lib"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="05.startup"/>
 					</sourceEntries>

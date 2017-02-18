@@ -8,7 +8,7 @@
 // ---------- SYSTEM INCLUDE --------------------------------------------------------------------- //
 #include "stdint.h"
 #include "MotorControl.h"
-#include "Display7Segment.h"
+//#include "Display7Segment.h"
 // ---------- EXTERNAL MODULE INCLUDE ------------------------------------------------------------ //
 // N/A
 // ---------- PUBLIC PROGRAMMING DEFINE ---------------------------------------------------------- //
@@ -47,10 +47,10 @@ namespace Motion {
 // ---------- TYPEDEF DATA TYPE DEFINITION ------------------------------------------------------- //
 // N/A
 // ---------- STRUCT OR UNION DATA TYPE DEFINITION ----------------------------------------------- //
-typedef struct {
+/*typedef struct {
 	uint32_t	speed;
 	uint32_t 	acc;
-};
+};*/
 // ---------- PUBLIC MACRO DEFINITION ------------------------------------------------------------ //
 // N/A
 // ---------- EXTERN FUNCTION -------------------------------------------------------------------- //
@@ -69,7 +69,7 @@ public:
 	virtual ~MotionControl();
 
 private:
-	Display7Segment*		display;
+	//Display7Segment*		display;
 	MOTOR::MotorControl* 	motor;
 	ControlState			controlState;
 
