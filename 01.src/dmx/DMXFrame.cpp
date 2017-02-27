@@ -31,19 +31,19 @@ namespace dmx {
 DMXFrame::DMXFrame(uint16_t frameSize) {
 	// TODO Auto-generated constructor stub
 	this->frameSize = frameSize;
-	this->pDataFrame = (uint8_t*) malloc(frameSize);
+	//this->pDataFrame = (uint8_t*) malloc(frameSize);
 	this->currentCh = 0;
 }
 
 DMXFrame::DMXFrame(DMXFrame &buffer) {
 	this->frameSize = buffer.frameSize;
-	this->pDataFrame = buffer.pDataFrame;
+	//this->pDataFrame = buffer.pDataFrame;
 	this->currentCh = 0;
 }
 
 DMXFrame::~DMXFrame() {
 	// TODO Auto-generated destructor stub
-	free((void*) this->pDataFrame);
+	//free((void*) this->pDataFrame);
 }
 
 uint8_t DMXFrame::GetChanelData(uint16_t index) {
@@ -80,11 +80,11 @@ uint8_t DMXFrame::WriteDataToFrame(uint8_t data) {
 }
 
 uint8_t DMXFrame::SetFrameSize(uint16_t size) {
-
-	free((void*) this->pDataFrame);
 	this->frameSize = size;
-	this->pDataFrame = (uint8_t*) malloc(size);
+	/*free((void*) this->pDataFrame);
 
+	this->pDataFrame = new uint8_t[size];//(uint8_t*) malloc(size);
+	 */
 	return 1;
 }
 

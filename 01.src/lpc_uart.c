@@ -89,6 +89,7 @@ void UARTInit(Uart_type portNum, uint32_t baudrate, uint8_t loc) {
 	IRQn_Type type;
 	uint32_t Fdiv;
 	uint32_t clkDiv;
+	uint32_t irqP;
 	// Getting memory access of uart
 	if(portNum == UART0) {
 		uptr = (LPC_UART0_TypeDef*)LPC_UART0_BASE;
@@ -97,6 +98,8 @@ void UARTInit(Uart_type portNum, uint32_t baudrate, uint8_t loc) {
 		SYS_SetUART0ClockDiv(1);
 		clkDiv = LPC_SYSCON->UART0CLKDIV;
 		type = UART0_IRQn;
+		irqP = NVIC_GetPriority(UART0_IRQn);
+		//NVIC_SetPriority(UART0_IRQn, irqP);
 	}
 	else if (portNum == UART1) {
 		uptr = (LPC_UART0_TypeDef*)LPC_UART1_BASE;
@@ -114,10 +117,14 @@ void UARTInit(Uart_type portNum, uint32_t baudrate, uint8_t loc) {
 			| UART_CFG_TXDBREAK_DISABLE
 			| UART_DLAB_BIT;
 	Fdiv = ((SystemCoreClock/clkDiv)/16)/baudrate ;	/*baud rate */
-
+/*	if(portNum == UART0) {
+		uptr->LCR |= UART_CFG_TXDBREAK_ENABLE;
+	}*/
 	uptr->DLM = Fdiv / 256;
 	uptr->DLL = Fdiv % 256;
 	uptr->LCR &= ~UART_DLAB_BIT; 		// Clear DLAB bit
+
+	uptr->FCR = UART_CFG_FIFOTRG_8 | 1;
 
 	// Interrupt Enable RX and TX
 	uptr->IER = UART_INTCFG_RBR
