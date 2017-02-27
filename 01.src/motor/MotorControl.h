@@ -21,7 +21,9 @@
  * the timer1 frequency is the clock frequency divided by 8.
  */
 // Timer/Counter 1 running on 3,686MHz / 8 = 460,75kHz (2,17uS). (T1-FREQ 460750)
-#define T1_FREQ 2000000
+//#define T1_FREQ 2000000
+// Timer is running on 500 kHz
+#define T1_FREQ 500000
 
 //! Number of (full)steps per round on stepper motor in use.
 #define FSPR 200
@@ -67,7 +69,7 @@ public:
 	void Init();
 	void begin();
 
-
+	void MoveTo(uint32_t position);
 	void Move(int32_t step, uint32_t accel, uint32_t decel, uint32_t speed);
 
 	static void Callback(MotorControl* obj);
@@ -76,6 +78,7 @@ private:
 	void Process(void);
 	void StartTimer(void);
 	void StopTimer();
+	void SetDirection(Direction dir);
 
 private:
 	KERNEL_TIMER		timer;
@@ -91,6 +94,12 @@ private:
 	uint32_t lastAccelDelay;
 	uint32_t stepCount;
 	int32_t rest;
+
+	uint32_t currentStep;
+	uint32_t targetStep;
+	uint32_t home;
+	uint8_t isBusy;
+
 };
 
 }

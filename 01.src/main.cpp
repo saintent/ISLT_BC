@@ -18,7 +18,6 @@
 #include "valve.h"
 #include "comport.h"
 #include "relay.h"
-#include "motor/MotionControl.h"
 #include "TempSensor.h"
 #include "TTable.h"
 #include "IAAP.h"
@@ -27,6 +26,7 @@
 #include "lpc12xx_uart.h"
 #include "DMXSlave.h"
 #include "LPCTimer.h"
+#include "motor/MotorControl.h"
 
 // TODO: insert other include files here
 //extern void SysTick_Handler (void);
@@ -101,16 +101,16 @@ void button_CallBack(BT_TYPE_T type, BT_STATE_TYPE_T state) {
 			//pMotor.MoveToStep()
 			//pMotor.ForceMove(MOVE_FF);
 			isButtonPress = TRUE;
-			pTB6600.SetDir(TB6600_CW);
-			pTB6600.SetManualMode(ENABLE);
-			pTB6600.ForceActive(ENABLE);
+			//pTB6600.SetDir(TB6600_CW);
+			//pTB6600.SetManualMode(ENABLE);
+			//pTB6600.ForceActive(ENABLE);
 
 		}
 		if (state == BT_STATE_PRESS) {
 			//pMotor.ForceMove(MOVE_STOP);
 			isButtonPress = FALSE;
-			pTB6600.SetManualMode(DISABLE);
-			pTB6600.ForceActive(DISABLE);
+			//pTB6600.SetManualMode(DISABLE);
+			//pTB6600.ForceActive(DISABLE);
 /*			if(isBusy == FALSE) {
 				pMotor.MoveToStep(MOVE_FF, 3200*5);
 			}*/
@@ -120,17 +120,18 @@ void button_CallBack(BT_TYPE_T type, BT_STATE_TYPE_T state) {
 		if (state == BT_STATE_PUSH) {
 			//pMotor.MoveToStep()
 			//pMotor.ForceMove(MOVE_RW);
-			pTB6600.SetDir(TB6600_CCW);
-			pTB6600.SetManualMode(ENABLE);
-			pTB6600.ForceActive(ENABLE);
+			//pTB6600.SetDir(TB6600_CCW);
+			//pTB6600.SetManualMode(ENABLE);
+			//pTB6600.ForceActive(ENABLE);
 			isButtonPress = TRUE;
 		}
 		else if (state == BT_STATE_PRESS) {
 			//pMotor.ForceMove(MOVE_STOP);
 			isButtonPress = FALSE;
-			pTB6600.SetManualMode(DISABLE);
-			pTB6600.ForceActive(DISABLE);
-			pMotor.Move(20, 100, 100, 1000);
+			//pTB6600.SetManualMode(DISABLE);
+			//pTB6600.ForceActive(DISABLE);
+			pMotor.MoveTo(400);
+			//pMotor.Move(20, 100, 100, 1000);
 /*			if(isBusy == FALSE) {
 				pMotor.MoveToStep(MOVE_RW, 3200*5);
 			}*/
@@ -140,7 +141,7 @@ void button_CallBack(BT_TYPE_T type, BT_STATE_TYPE_T state) {
 		if (state == BT_STATE_PRESS) {
 			//pValve.Valve_Control(VALVE_RIGHT);
 			//pHeater.Relay_Control(RELAY_OFF);
-			pMotor.Move(100, 100, 100, 1000);
+			pMotor.MoveTo(0);
 			if(pH1.Relay_GetSta() == RELAY_ON) {
 				pH1.Relay_Control(RELAY_OFF);
 			}
@@ -153,7 +154,7 @@ void button_CallBack(BT_TYPE_T type, BT_STATE_TYPE_T state) {
 		if (state == BT_STATE_PRESS) {
 			//pValve.Valve_Control(VALVE_LEFT);
 			//pHeater.Relay_Control(RELAY_ON);
-			pMotor.Move(50, 1000, 1000, 10000);
+			pMotor.MoveTo(1200);
 			if(pH2.Relay_GetSta() == RELAY_ON) {
 				pH2.Relay_Control(RELAY_OFF);
 				pH3.Relay_Control(RELAY_OFF);
@@ -247,7 +248,7 @@ void Init(void) {
 	//lpcTimer.Init(100);
 	//lpcTimer.SetEventCallBack(TimerEvent_Callback);
 
-	pMotor.Move(100, 1000, 1000, 10000);
+	//pMotor.MoveTo(800);
 
 }
 
@@ -267,7 +268,7 @@ int main(void) {
     while(1) {
     	if (ObjectTick.us10Tick) {
 //#ifndef BMODEL
-        	pTB6600.Tick();
+        	//pTB6600.Tick();
 //#endif
         	ObjectTick.us10Tick = FALSE;
     	}

@@ -8,7 +8,8 @@
 // ---------- SYSTEM INCLUDE --------------------------------------------------------------------- //
 #include "MotorControl.h"
 #include "LPCTimer.h"
-
+#include "lpc12xx_gpio.h"
+#include "lpc12xx_iocon.h"
 #ifdef ARDUINO >= 100
 #include <Arduino.h>
 #endif
@@ -34,7 +35,10 @@ MOTOR::MotorControl motionControl;
 #endif
 MOTOR::MotorControl* _motionControl;
 // ---------- PRIVATE PROGRAMMING DEFINE -------------------------------------------------------- //
-// N/A
+#define MCLK_PIN	21
+#define MDIR_PIN	22
+#define MEN_PIN		20
+
 // ---------- PRIVATE MACRO DEFINITION ---------------------------------------------------------- //
 // N/A
 // ---------- SOURCE FILE IMPLEMENTATION -------------------------------------------------------- //
@@ -51,6 +55,7 @@ MotorControl::~MotorControl() {
 
 void MotorControl::begin() {
 	this->Init();
+
 }
 
 void MotorControl::Init() {
@@ -65,6 +70,27 @@ void MotorControl::Init() {
 	timer.Init(1000);
 	timer.SetEventCallBack(TimerEvent_Callback);
 
+	IOCON_PIO_CFG_Type iocon;
+	IOCON_StructInit(&iocon);
+	iocon.type = IOCON_PIO_0_20;
+	iocon.od = IOCON_PIO_OD_ENABLE;
+	IOCON_SetFunc(&iocon);
+	iocon.type = IOCON_PIO_0_22;
+	IOCON_SetFunc(&iocon);
+	GPIO_SetDir(LPC_GPIO0, MDIR_PIN, 1);
+	GPIO_SetDir(LPC_GPIO0, MEN_PIN, 1);
+}
+void MotorControl::MoveTo(uint32_t position) {
+	// Get ditance
+	int32_t distance;
+	if (!this->isBusy) {
+		StopTimer();
+		this->isBusy = TRUE;
+		distance = position - this->currentStep;
+		this->targetStep = distance + (int32_t) this->currentStep;
+		this->Move(distance, 800, 500, 5000);
+
+	}
 }
 
 void MotorControl::Move(int32_t step, uint32_t accel, uint32_t decel,
@@ -78,8 +104,10 @@ void MotorControl::Move(int32_t step, uint32_t accel, uint32_t decel,
 	if (step < 0) {
 		this->direction = Direction_CCW;
 		step = -step;
+		this->SetDirection(Direction_CCW);
 	} else {
 		this->direction = Direction_CW;
+		this->SetDirection(Direction_CW);
 	}
 
 	// If moving only 1 step.
@@ -138,7 +166,7 @@ void MotorControl::Move(int32_t step, uint32_t accel, uint32_t decel,
 		this->decelStart = step + this->decelVal;
 
 		// If the maximum speed is so low that we dont need to go via accelration state.
-		if (this->stepDelay <= this->minDelay) {
+		if ((int32_t) this->stepDelay <= this->minDelay) {
 			this->stepDelay = this->minDelay;
 			this->runState = SPS_Run;
 		} else {
@@ -150,6 +178,8 @@ void MotorControl::Move(int32_t step, uint32_t accel, uint32_t decel,
 		timer.SetMatch(this->stepDelay);
 		StartTimer();
 
+	} else {
+		this->isBusy = FALSE;
 	}
 }
 
@@ -163,7 +193,7 @@ namespace MOTOR {
 
 void MotorControl::Process() {
 	// Holds next delay period.
-	unsigned int new_step_delay;
+	int32_t new_step_delay;
 	// Remember the last step delay used when accelrating.
 	//static int last_accel_delay;
 	// Counting steps when moving.
@@ -173,6 +203,14 @@ void MotorControl::Process() {
 
 	timer.SetMatch(this->stepDelay);
 
+	if (this->runState != SPS_Stop) {
+		if (this->direction == Direction_CCW) {
+			this->currentStep--;
+		} else {
+			this->currentStep++;
+		}
+	}
+
 	switch (this->runState) {
 	case SPS_Stop:
 		this->stepCount = 0;
@@ -180,6 +218,7 @@ void MotorControl::Process() {
 		this->rest = 0;
 
 		// Stop Timer/Counter 1.
+		this->isBusy = FALSE;
 		StopTimer();
 		break;
 
@@ -242,7 +281,9 @@ void MotorControl::Process() {
 		}
 		break;
 	}
+
 	this->stepDelay = new_step_delay;
+
 }
 
 void MotorControl::StartTimer() {
@@ -253,7 +294,16 @@ void MotorControl::StopTimer() {
 	timer.Stop();
 }
 
-} /* end of namespace MOTOR */
+void MotorControl::SetDirection(Direction dir) {
+	if (dir == Direction_CW) {
+		GPIO_SetHighLevel(LPC_GPIO0, MDIR_PIN, 1);
+	} else {
+		GPIO_SetLowLevel(LPC_GPIO0, MDIR_PIN, 1);
+	}
+}
+
+}
+/* end of namespace MOTOR */
 
 /*! \brief Square root routine.
  *
@@ -291,22 +341,7 @@ static unsigned long sqrt(unsigned long x) {
 	}
 }
 
-
 void TimerEvent_Callback(LPCTimer::eTimerEvent event) {
 	MOTOR::MotorControl::Callback(_motionControl);
 }
-/*! \brief Find minimum value.
- *
- *  Returns the smallest value.
- *
- *  \return  Min(x,y).
- */
-/*unsigned int min(unsigned int x, unsigned int y) {
- if(x < y){
- return x;
- }
- else{
- return y;
- }
- }*/
 // ---------- END OF SOURCE FILE IMPLEMENTATION ------------------------------------------------- //
