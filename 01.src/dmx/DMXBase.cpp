@@ -5,6 +5,7 @@
 // ---------- SYSTEM INCLUDE --------------------------------------------------------------------- //
 //
 #include "DMXBase.h"
+#include "lpc12xx_dma.h"
 using namespace uart;
 // ---------- EXTERNAL MODULE INCLUDE ------------------------------------------------------------ //
 // N/A
@@ -27,7 +28,8 @@ using namespace uart;
 // ---------- PRIVATE MACRO DEFINITION ---------------------------------------------------------- //
 // N/A
 // ---------- SOURCE FILE IMPLEMENTATION -------------------------------------------------------- //
-
+uint8_t testData[256];
+uint8_t ptest;
 //=========== Public Method ======================================================================//
 namespace dmx {
 
@@ -40,6 +42,10 @@ DMXBase::DMXBase(uint8_t startChannel, uint8_t channelSpan,
 	this->currentRevcChannel = 0;
 	this->state = dmxWaitForStart;
 	this->channelSpan = channelSpan;
+
+	DMA_InitTypeDef dmaInit;
+	dmaInit.AccessControl = DMA_USERACCESS;
+	dmaInit.BufferControl = DMA_BUFFERED;
 }
 
 DMXBase::~DMXBase() {
@@ -51,16 +57,20 @@ uint8_t DMXBase::GetChannelValue(uint16_t channel) {
 	return this->frame.GetChanelData(channel - 1);
 }
 
+uint8_t DMXBase::SetStartChannel(uint16_t channel) {
+	this->startChannel = channel;
+}
+
 void DMXBase::OnRecviceFrame(void* obj, eUartEvent event, uint8_t data) {
-	((DMXBase*)obj)->OnReceiveProcess(event, data);
+	((DMXBase*) obj)->OnReceiveProcess(event, data);
 }
 
 void DMXBase::OnReceiveProcess(eUartEvent event, uint8_t data) {
 
 	if (event == eUartBreakInt) {
 		this->state = dmxWaitStartAddress;
-	}
-	else {
+		ptest = 0;
+	} else {
 		switch (this->state) {
 		case dmxWaitStartAddress:
 			// Ignore data for this frame
@@ -86,7 +96,8 @@ void DMXBase::OnReceiveProcess(eUartEvent event, uint8_t data) {
 		case dmxRecvData:
 			this->frame.WriteDataToFrame(data);
 
-			if (++this->currentRevcChannel >= (this->channelSpan + this->startChannel)) {
+			if (++this->currentRevcChannel
+					>= (this->channelSpan + this->startChannel)) {
 
 				if (this->onFrameReceived != 0) {
 					this->onFrameReceived(this->currentRevcChannel);
@@ -96,17 +107,20 @@ void DMXBase::OnReceiveProcess(eUartEvent event, uint8_t data) {
 			}
 			break;
 		case dmxFrameReady:
-		default :
+		default:
 			// Do nothing
 			// wait until get next frame
 			break;
 
 		}
+		testData[ptest] = data;
+		if (++ptest >= 192) {
+			ptest = 0;
+		}
 	}
 }
 
 //=========== Private Method ======================================================================//
-
 
 }
 // ---------- END OF SOURCE FILE IMPLEMENTATION ------------------------------------------------- //

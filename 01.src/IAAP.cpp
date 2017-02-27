@@ -97,25 +97,6 @@ void IAAP::readCMDProcess(uint8_t* Data) {
 	switch (reg) {
 	case REG_MOTOR:
 		switch (attr) {
-		/*case MOTOR_ATTR_MPS :
-			//u16Data = prMotor->GetMPS();
-			dOut[3] = (uint8_t) (u16Data >> 8);
-			dOut[4] = (uint8_t) u16Data;
-			dOutSize = 2;
-			break;
-		case MOTOR_ATTR_LV :
-			prMotor->GetMoveLevel(&dOut[3], &dOutSize);
-			break;
-		case MOTOR_ATTR_SPD :
-			u16Data = prMotor->GetSpeed();
-			dOut[3] = (uint8_t) (u16Data >> 8);
-			dOut[4] = (uint8_t) u16Data;
-			dOutSize = 2;
-			break;
-		default :
-			dOutSize = 0;
-			break;
-		}*/
 		case 0 :
 			dOut[3] = prMotor->Get(TB6600_M);
 			dOutSize = 1;
@@ -215,30 +196,6 @@ void IAAP::writeCMDProcess(uint8_t* Data) {
 	reg = (IAAR_REGISTER_T) Data[0];
 	switch (reg) {
 	case REG_MOTOR:
-		/*switch (attr) {
-		case 0 :
-			dOut[3] = prMotor->Get(TB6600_M);
-			dOutSize = 1;
-			break;
-		case 1 :
-			dOut[3] = prMotor->Get(TB6600_TQ);
-			dOutSize = 1;
-			break;
-		case 2 :
-			dOut[3] = prMotor->Get(TB6600_LA);
-			dOutSize = 1;
-			break;
-		case 3 :
-			dOut[3] = prMotor->Get(TB6600_EN);
-			dOutSize = 1;
-			break;
-		case 4 :
-			dOut[3] = prMotor->Get(TB6600_PSC);
-			dOutSize = 1;
-			break;
-		}
-		dOut[2] = dOutSize;
-		pdOutSize[0] = dOutSize + 3;*/
 		break;
 	case REG_VALVE:
 		break;
@@ -320,42 +277,6 @@ void IAAP::actionCMDProcess(uint8_t* Data) {
 				this->genResponse(reg, ERROR);
 			}
 		}
-		/*switch (hActType) {
-		case HEATER_ACT_CTR_0 :
-			hStatus = (RELAY_ST) Data[2];
-			if ((hStatus == RELAY_OFF) || (hStatus == RELAY_ON)) {
-				prHeater[0]->Relay_Control(hStatus);
-				this->genResponse(reg, SUCCESS);
-			}
-			else {
-				this->genResponse(reg, ERROR);
-			}
-			break;
-		case HEATER_ACT_CTR_1 :
-			hStatus = (RELAY_ST) Data[2];
-			if ((hStatus == RELAY_OFF) || (hStatus == RELAY_ON)) {
-				prHeater->Relay_Control(hStatus);
-				this->genResponse(reg, SUCCESS);
-			}
-			else {
-				this->genResponse(reg, ERROR);
-			}
-			break;
-		case HEATER_ACT_CTR_2 :
-			hStatus = (RELAY_ST) Data[2];
-			if ((hStatus == RELAY_OFF) || (hStatus == RELAY_ON)) {
-				prHeater->Relay_Control(hStatus);
-				this->genResponse(reg, SUCCESS);
-			}
-			else {
-				this->genResponse(reg, ERROR);
-			}
-			break;
-		default :
-			// Exception command
-			this->genResponse(reg, ERROR);
-			break;
-		}*/
 		break;
 	case REG_TEMPSENSOR:
 		// Exception command

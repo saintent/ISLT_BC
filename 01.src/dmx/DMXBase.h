@@ -46,7 +46,7 @@ public:
 	virtual ~DMXBase(void);
 
 	uint8_t GetChannelValue(uint16_t channel);
-
+	uint8_t SetStartChannel(uint16_t channel);
 	static void OnRecviceFrame(void* obj, eUartEvent event, uint8_t data);
 private:
 	void OnReceiveProcess(eUartEvent event, uint8_t data);

@@ -130,7 +130,7 @@
 #define SYSOSCCTRL_Val        0x00000000
 #define SYSPLLCLKSEL_Val      0x00000000
 #define SYSPLL_SETUP          1
-#define SYSPLLCTRL_Val        0x00000041
+#define SYSPLLCTRL_Val        0x00000043
 #define MAINCLKSEL_Val        0x00000003
 #define WDTOSC_SETUP          0
 #define WDTOSCCTRL_Val        0x00000001
@@ -411,7 +411,7 @@ void SystemInit (void)
   Enable 2 cycle reads for high frequency operation
   Must be done prior to setting up PLL    
   */
-  LPC_FLASHCTRL->FLASHCFG = 0;
+  //LPC_FLASHCTRL->FLASHCFG = 0;
   LPC_SYSCON->PRESETCTRL &= ~(1<<15);
 #endif
 
