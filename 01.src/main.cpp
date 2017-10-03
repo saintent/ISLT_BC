@@ -27,6 +27,11 @@
 #include "LPCTimer.h"
 #include "motor/MotorControl.h"
 
+#define STDY_LV 54400+1800
+#define LOW_LV	40000-3200
+#define MID_LV	25000
+#define HIGH_LV	5000
+
 // TODO: insert other include files here
 //extern void SysTick_Handler (void);
 //extern void ADC_IRQHandler (void);
@@ -190,13 +195,13 @@ void DMSProcessTick(void) {
 
 		dmxMVal = MotorCh.GetValue();
 		if (dmxMVal >= 200) {
-			((MOTOR::MotorControl*) MotorCh.context)->MoveTo(1200);
+			((MOTOR::MotorControl*) MotorCh.context)->MoveTo(HIGH_LV);
 		} else if (dmxMVal < 200 && dmxMVal >= 150) {
-			((MOTOR::MotorControl*) MotorCh.context)->MoveTo(2400);
+			((MOTOR::MotorControl*) MotorCh.context)->MoveTo(MID_LV);
 		} else if (dmxMVal < 150 && dmxMVal >= 70) {
-			((MOTOR::MotorControl*) MotorCh.context)->MoveTo(3200);
+			((MOTOR::MotorControl*) MotorCh.context)->MoveTo(LOW_LV);
 		} else {
-			((MOTOR::MotorControl*) MotorCh.context)->MoveTo(4000);
+			((MOTOR::MotorControl*) MotorCh.context)->MoveTo(STDY_LV);
 		}
 	//}
 	for (uint8_t i = 0; i < 3; i++) {
@@ -209,7 +214,7 @@ void DMSProcessTick(void) {
 		}
 	}
 
-	LPC_UART0->FDR |= UART_CFG_DMAMODE_ENABLE;
+	//LPC_UART0->FDR |= UART_CFG_DMAMODE_ENABLE;
 
 }
 
@@ -226,7 +231,7 @@ int main(void) {
 	// Initialized object
 	Init();
 	//
-	pMotor.MoveTo(4000);
+	pMotor.MoveTo(STDY_LV);
 	// Enter an infinite loop, just incrementing a counter
 	while (1) {
 		if (ObjectTick.us10Tick) {

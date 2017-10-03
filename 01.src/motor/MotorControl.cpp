@@ -88,7 +88,7 @@ void MotorControl::MoveTo(uint32_t position) {
 		this->isBusy = TRUE;
 		distance = position - this->currentStep;
 		this->targetStep = distance + (int32_t) this->currentStep;
-		this->Move(distance, 800, 500, 5000);
+		this->Move(distance, 25, 10, 2500);
 
 	}
 }
